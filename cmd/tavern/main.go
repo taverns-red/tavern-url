@@ -54,6 +54,8 @@ func main() {
 	orgSvc := service.NewOrgService(orgRepo)
 	clickRepo := repository.NewPgClickRepository(pool)
 	analyticsSvc := service.NewAnalyticsService(clickRepo)
+	apiKeyRepo := repository.NewPgAPIKeyRepository(pool)
+	apiKeySvc := service.NewAPIKeyService(apiKeyRepo)
 	sessionStore := auth.NewSessionStore(sessionSecret)
 
 	// Wire handlers.
@@ -62,6 +64,7 @@ func main() {
 	orgHandler := handler.NewOrgHandler(orgSvc)
 	qrSvc := service.NewQRService()
 	analyticsHandler := handler.NewAnalyticsHandler(analyticsSvc, qrSvc, linkSvc, baseURL)
+	apiKeyHandler := handler.NewAPIKeyHandler(apiKeySvc)
 
 	// Google OAuth (optional — only if credentials are configured).
 	var googleHandler *handler.GoogleLoginHandler
@@ -105,9 +108,9 @@ func main() {
 		r.Post("/auth/login", authHandler.Login)
 		r.Post("/auth/logout", authHandler.Logout)
 
-		// Protected routes.
+		// Protected routes (session or API key).
 		r.Group(func(r chi.Router) {
-			r.Use(auth.RequireAuth(sessionStore, authSvc))
+			r.Use(auth.RequireAuthOrAPIKey(sessionStore, authSvc, apiKeySvc))
 			r.Get("/auth/me", authHandler.Me)
 			r.Post("/links", linkHandler.Create)
 			r.Get("/links", linkHandler.List)
@@ -116,6 +119,9 @@ func main() {
 			r.Get("/links/{id}/qr", analyticsHandler.QRCode)
 			r.Post("/orgs", orgHandler.Create)
 			r.Get("/orgs", orgHandler.List)
+			r.Post("/keys", apiKeyHandler.Create)
+			r.Get("/keys", apiKeyHandler.List)
+			r.Delete("/keys/{id}", apiKeyHandler.Delete)
 		})
 	})
 
