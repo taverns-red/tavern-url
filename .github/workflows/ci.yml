@@ -15,7 +15,7 @@ jobs:
 
       - uses: actions/setup-go@v5
         with:
-          go-version: '1.23'
+          go-version-file: 'go.mod'
 
       - name: Install dependencies
         run: go mod download
@@ -24,7 +24,7 @@ jobs:
         run: go vet ./...
 
       - name: Test
-        run: go test ./... -count=1 -race -coverprofile=coverage.out
+        run: go test ./... -count=1 -race
 
       - name: Build
         run: go build -o tavern ./cmd/tavern/
