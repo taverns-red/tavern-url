@@ -69,3 +69,56 @@ func (r *PgLinkRepository) Delete(ctx context.Context, id int64) error {
 	}
 	return nil
 }
+
+// GetByID retrieves a link by ID.
+func (r *PgLinkRepository) GetByID(ctx context.Context, id int64) (*model.Link, error) {
+	link := &model.Link{}
+	err := r.pool.QueryRow(ctx,
+		`SELECT id, slug, original_url, created_at, updated_at
+		 FROM links WHERE id = $1`, id,
+	).Scan(&link.ID, &link.Slug, &link.OriginalURL, &link.CreatedAt, &link.UpdatedAt)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, ErrLinkNotFound
+		}
+		return nil, err
+	}
+	return link, nil
+}
+
+// ListAll returns all links, ordered by newest first.
+func (r *PgLinkRepository) ListAll(ctx context.Context) ([]model.Link, error) {
+	rows, err := r.pool.Query(ctx,
+		`SELECT id, slug, original_url, created_at, updated_at
+		 FROM links ORDER BY created_at DESC`)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var links []model.Link
+	for rows.Next() {
+		var link model.Link
+		if err := rows.Scan(&link.ID, &link.Slug, &link.OriginalURL, &link.CreatedAt, &link.UpdatedAt); err != nil {
+			return nil, err
+		}
+		links = append(links, link)
+	}
+	return links, rows.Err()
+}
+
+// Update updates a link's original URL.
+func (r *PgLinkRepository) Update(ctx context.Context, id int64, originalURL string) error {
+	result, err := r.pool.Exec(ctx,
+		`UPDATE links SET original_url = $1, updated_at = NOW() WHERE id = $2`,
+		originalURL, id,
+	)
+	if err != nil {
+		return err
+	}
+	if result.RowsAffected() == 0 {
+		return ErrLinkNotFound
+	}
+	return nil
+}
+

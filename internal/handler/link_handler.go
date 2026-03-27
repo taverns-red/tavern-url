@@ -96,6 +96,52 @@ func (h *LinkHandler) Redirect(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, link.OriginalURL, http.StatusFound)
 }
 
+// List handles GET /api/v1/links
+func (h *LinkHandler) List(w http.ResponseWriter, r *http.Request) {
+	links, err := h.svc.ListLinks(r.Context())
+	if err != nil {
+		writeJSON(w, http.StatusInternalServerError, errorResponse{Error: "internal server error"})
+		return
+	}
+
+	var resp []createLinkResponse
+	for _, l := range links {
+		resp = append(resp, createLinkResponse{
+			ID:          l.ID,
+			Slug:        l.Slug,
+			ShortURL:    h.baseURL + "/" + l.Slug,
+			OriginalURL: l.OriginalURL,
+		})
+	}
+	if resp == nil {
+		resp = []createLinkResponse{}
+	}
+	writeJSON(w, http.StatusOK, resp)
+}
+
+// Delete handles DELETE /api/v1/links/{id}
+func (h *LinkHandler) Delete(w http.ResponseWriter, r *http.Request) {
+	idStr := chi.URLParam(r, "id")
+	var id int64
+	for _, c := range idStr {
+		if c < '0' || c > '9' {
+			writeJSON(w, http.StatusBadRequest, errorResponse{Error: "invalid link ID"})
+			return
+		}
+		id = id*10 + int64(c-'0')
+	}
+
+	if err := h.svc.DeleteLink(r.Context(), id); err != nil {
+		if errors.Is(err, repository.ErrLinkNotFound) {
+			writeJSON(w, http.StatusNotFound, errorResponse{Error: "link not found"})
+			return
+		}
+		writeJSON(w, http.StatusInternalServerError, errorResponse{Error: "internal server error"})
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]string{"message": "link deleted"})
+}
+
 // writeJSON writes a JSON response with the given status code.
 func writeJSON(w http.ResponseWriter, status int, v any) {
 	w.Header().Set("Content-Type", "application/json")

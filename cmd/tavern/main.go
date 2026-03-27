@@ -76,7 +76,7 @@ func main() {
 	}
 
 	// Page handler for server-rendered pages.
-	pageHandler := handler.NewPageHandler(sessionStore, authSvc)
+	pageHandler := handler.NewPageHandler(sessionStore, authSvc, linkSvc, baseURL)
 
 	// Set up router.
 	r := chi.NewRouter()
@@ -106,6 +106,8 @@ func main() {
 			r.Use(auth.RequireAuth(sessionStore, authSvc))
 			r.Get("/auth/me", authHandler.Me)
 			r.Post("/links", linkHandler.Create)
+			r.Get("/links", linkHandler.List)
+			r.Delete("/links/{id}", linkHandler.Delete)
 			r.Post("/orgs", orgHandler.Create)
 			r.Get("/orgs", orgHandler.List)
 		})

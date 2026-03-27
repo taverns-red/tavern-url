@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/taverns-red/tavern-url/internal/auth"
+	"github.com/taverns-red/tavern-url/internal/service"
 	"github.com/taverns-red/tavern-url/templates"
 )
 
@@ -11,11 +12,13 @@ import (
 type PageHandler struct {
 	sessionStore auth.SessionStore
 	authSvc      *auth.Service
+	linkSvc      *service.LinkService
+	baseURL      string
 }
 
 // NewPageHandler creates a new PageHandler.
-func NewPageHandler(sessionStore auth.SessionStore, authSvc *auth.Service) *PageHandler {
-	return &PageHandler{sessionStore: sessionStore, authSvc: authSvc}
+func NewPageHandler(sessionStore auth.SessionStore, authSvc *auth.Service, linkSvc *service.LinkService, baseURL string) *PageHandler {
+	return &PageHandler{sessionStore: sessionStore, authSvc: authSvc, linkSvc: linkSvc, baseURL: baseURL}
 }
 
 func (h *PageHandler) isAuthenticated(r *http.Request) bool {
@@ -50,13 +53,18 @@ func (h *PageHandler) Register(w http.ResponseWriter, r *http.Request) {
 	templates.RegisterPage("").Render(r.Context(), w)
 }
 
-// Dashboard renders the main dashboard (placeholder for Sprint 5).
+// Dashboard renders the main dashboard with link list.
 func (h *PageHandler) Dashboard(w http.ResponseWriter, r *http.Request) {
 	if !h.isAuthenticated(r) {
 		http.Redirect(w, r, "/login", http.StatusFound)
 		return
 	}
-	// For now, render a simple authenticated page. Sprint 5 will add the full dashboard.
-	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	w.Write([]byte("<h1>Dashboard — coming in Sprint 5</h1>"))
+
+	links, err := h.linkSvc.ListLinks(r.Context())
+	if err != nil {
+		http.Error(w, "failed to list links", http.StatusInternalServerError)
+		return
+	}
+
+	templates.DashboardPage(links, h.baseURL).Render(r.Context(), w)
 }

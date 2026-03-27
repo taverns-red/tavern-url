@@ -54,6 +54,33 @@ func (m *mockLinkRepo) Delete(ctx context.Context, id int64) error {
 	return repository.ErrLinkNotFound
 }
 
+func (m *mockLinkRepo) GetByID(ctx context.Context, id int64) (*model.Link, error) {
+	for _, link := range m.links {
+		if link.ID == id {
+			return link, nil
+		}
+	}
+	return nil, repository.ErrLinkNotFound
+}
+
+func (m *mockLinkRepo) ListAll(ctx context.Context) ([]model.Link, error) {
+	var links []model.Link
+	for _, link := range m.links {
+		links = append(links, *link)
+	}
+	return links, nil
+}
+
+func (m *mockLinkRepo) Update(ctx context.Context, id int64, originalURL string) error {
+	for _, link := range m.links {
+		if link.ID == id {
+			link.OriginalURL = originalURL
+			return nil
+		}
+	}
+	return repository.ErrLinkNotFound
+}
+
 func TestCreateLink_AutoSlug(t *testing.T) {
 	repo := newMockLinkRepo()
 	svc := NewLinkService(repo)

@@ -76,6 +76,19 @@ func (s *LinkService) DeleteLink(ctx context.Context, id int64) error {
 	return s.repo.Delete(ctx, id)
 }
 
+// ListLinks returns all links.
+func (s *LinkService) ListLinks(ctx context.Context) ([]model.Link, error) {
+	return s.repo.ListAll(ctx)
+}
+
+// UpdateLink updates a link's original URL.
+func (s *LinkService) UpdateLink(ctx context.Context, id int64, originalURL string) error {
+	if err := validateURL(originalURL); err != nil {
+		return fmt.Errorf("invalid URL: %w", err)
+	}
+	return s.repo.Update(ctx, id, originalURL)
+}
+
 // validateURL checks that the URL is a valid HTTP or HTTPS URL.
 func validateURL(rawURL string) error {
 	u, err := url.ParseRequestURI(rawURL)

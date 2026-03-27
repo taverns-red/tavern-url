@@ -21,6 +21,16 @@ type LinkRepository interface {
 	// GetBySlug retrieves a link by its slug. Returns ErrLinkNotFound if not found.
 	GetBySlug(ctx context.Context, slug string) (*model.Link, error)
 
+	// GetByID retrieves a link by ID. Returns ErrLinkNotFound if not found.
+	GetByID(ctx context.Context, id int64) (*model.Link, error)
+
+	// ListAll returns all links, ordered by newest first.
+	ListAll(ctx context.Context) ([]model.Link, error)
+
 	// Delete removes a link by ID. Returns ErrLinkNotFound if not found.
 	Delete(ctx context.Context, id int64) error
+
+	// Update updates a link's original URL. Returns ErrLinkNotFound if not found.
+	Update(ctx context.Context, id int64, originalURL string) error
 }
+
