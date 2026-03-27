@@ -94,6 +94,12 @@ func (h *LinkHandler) Redirect(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Check expiration and click limits.
+	if link.IsExpired() || link.IsExhausted() {
+		http.Error(w, "this link has expired or reached its click limit", http.StatusGone)
+		return
+	}
+
 	// Record click asynchronously (non-blocking).
 	if h.analyticsSvc != nil {
 		h.analyticsSvc.RecordClick(r.Context(), link.ID, r)

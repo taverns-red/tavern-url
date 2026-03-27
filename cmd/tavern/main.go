@@ -65,6 +65,7 @@ func main() {
 	orgHandler := handler.NewOrgHandler(orgSvc)
 	qrSvc := service.NewQRService()
 	analyticsHandler := handler.NewAnalyticsHandler(analyticsSvc, qrSvc, linkSvc, baseURL)
+	exportHandler := handler.NewExportHandler(analyticsSvc)
 	apiKeyHandler := handler.NewAPIKeyHandler(apiKeySvc)
 
 	// Google OAuth (optional — only if credentials are configured).
@@ -95,6 +96,7 @@ func main() {
 	r.Use(chimiddleware.Recoverer)
 	r.Use(chimiddleware.RequestID)
 	r.Use(chimiddleware.RealIP)
+	r.Use(tavmiddleware.SecurityHeaders)
 
 	// Static files.
 	r.Handle("/static/*", handler.StaticFileServer("static"))
@@ -122,6 +124,7 @@ func main() {
 			r.Get("/links", linkHandler.List)
 			r.Delete("/links/{id}", linkHandler.Delete)
 			r.Get("/links/{id}/analytics", analyticsHandler.GetSummary)
+			r.Get("/links/{id}/analytics/export", exportHandler.ExportCSV)
 			r.Get("/links/{id}/qr", analyticsHandler.QRCode)
 			r.Post("/orgs", orgHandler.Create)
 			r.Get("/orgs", orgHandler.List)
