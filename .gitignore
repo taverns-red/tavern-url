@@ -1,0 +1,39 @@
+# Binaries
+/tavern
+/bin/
+*.exe
+*.dll
+*.so
+*.dylib
+
+# Test
+*.test
+*.out
+coverage.html
+coverage.txt
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Dependency
+vendor/
+
+# Build
+/dist/
+/tmp/
+
+# Templ generated files (tracked, but useful to know)
+# *_templ.go
