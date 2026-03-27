@@ -99,7 +99,7 @@ func main() {
 	r.Use(tavmiddleware.SecurityHeaders)
 
 	// Static files.
-	r.Handle("/static/*", handler.StaticFileServer("static"))
+	r.Handle("/static/*", handler.StaticFileServer("static", nil))
 
 	// Page routes (server-rendered HTML).
 	r.Get("/", pageHandler.Home)
