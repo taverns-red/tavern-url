@@ -52,12 +52,16 @@ func main() {
 	linkSvc := service.NewLinkService(linkRepo)
 	authSvc := auth.NewService(userRepo)
 	orgSvc := service.NewOrgService(orgRepo)
+	clickRepo := repository.NewPgClickRepository(pool)
+	analyticsSvc := service.NewAnalyticsService(clickRepo)
 	sessionStore := auth.NewSessionStore(sessionSecret)
 
 	// Wire handlers.
-	linkHandler := handler.NewLinkHandler(linkSvc, baseURL)
+	linkHandler := handler.NewLinkHandler(linkSvc, analyticsSvc, baseURL)
 	authHandler := handler.NewAuthHandler(authSvc, sessionStore)
 	orgHandler := handler.NewOrgHandler(orgSvc)
+	qrSvc := service.NewQRService()
+	analyticsHandler := handler.NewAnalyticsHandler(analyticsSvc, qrSvc, linkSvc, baseURL)
 
 	// Google OAuth (optional — only if credentials are configured).
 	var googleHandler *handler.GoogleLoginHandler
@@ -108,6 +112,8 @@ func main() {
 			r.Post("/links", linkHandler.Create)
 			r.Get("/links", linkHandler.List)
 			r.Delete("/links/{id}", linkHandler.Delete)
+			r.Get("/links/{id}/analytics", analyticsHandler.GetSummary)
+			r.Get("/links/{id}/qr", analyticsHandler.QRCode)
 			r.Post("/orgs", orgHandler.Create)
 			r.Get("/orgs", orgHandler.List)
 		})

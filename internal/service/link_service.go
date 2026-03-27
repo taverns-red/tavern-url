@@ -71,6 +71,10 @@ func (s *LinkService) GetBySlug(ctx context.Context, slug string) (*model.Link, 
 	return s.repo.GetBySlug(ctx, slug)
 }
 
+// GetByID retrieves a link by its ID.
+func (s *LinkService) GetByID(ctx context.Context, id int64) (*model.Link, error) {
+	return s.repo.GetByID(ctx, id)
+}
 // DeleteLink deletes a link by ID.
 func (s *LinkService) DeleteLink(ctx context.Context, id int64) error {
 	return s.repo.Delete(ctx, id)

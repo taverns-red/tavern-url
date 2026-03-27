@@ -12,13 +12,14 @@ import (
 
 // LinkHandler handles HTTP requests for link operations.
 type LinkHandler struct {
-	svc     *service.LinkService
-	baseURL string
+	svc          *service.LinkService
+	analyticsSvc *service.AnalyticsService
+	baseURL      string
 }
 
 // NewLinkHandler creates a new LinkHandler.
-func NewLinkHandler(svc *service.LinkService, baseURL string) *LinkHandler {
-	return &LinkHandler{svc: svc, baseURL: baseURL}
+func NewLinkHandler(svc *service.LinkService, analyticsSvc *service.AnalyticsService, baseURL string) *LinkHandler {
+	return &LinkHandler{svc: svc, analyticsSvc: analyticsSvc, baseURL: baseURL}
 }
 
 // createLinkRequest is the JSON body for creating a short link.
@@ -91,6 +92,11 @@ func (h *LinkHandler) Redirect(w http.ResponseWriter, r *http.Request) {
 		}
 		http.Error(w, "internal server error", http.StatusInternalServerError)
 		return
+	}
+
+	// Record click asynchronously (non-blocking).
+	if h.analyticsSvc != nil {
+		h.analyticsSvc.RecordClick(r.Context(), link.ID, r)
 	}
 
 	http.Redirect(w, r, link.OriginalURL, http.StatusFound)

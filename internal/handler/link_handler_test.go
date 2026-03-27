@@ -85,7 +85,7 @@ func (m *mockLinkRepo) Update(ctx context.Context, id int64, originalURL string)
 func setupHandler() (*LinkHandler, *chi.Mux) {
 	repo := newMockRepo()
 	svc := service.NewLinkService(repo)
-	h := NewLinkHandler(svc, "http://localhost:8080")
+	h := NewLinkHandler(svc, nil, "http://localhost:8080")
 
 	r := chi.NewRouter()
 	r.Post("/api/v1/links", h.Create)
