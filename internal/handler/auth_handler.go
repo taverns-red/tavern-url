@@ -152,6 +152,14 @@ func (h *AuthHandler) Logout(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, http.StatusInternalServerError, errorResponse{Error: "failed to clear session"})
 		return
 	}
+
+	// HTMX request — redirect to home.
+	if r.Header.Get("HX-Request") == "true" {
+		w.Header().Set("HX-Redirect", "/")
+		w.WriteHeader(http.StatusOK)
+		return
+	}
+
 	writeJSON(w, http.StatusOK, map[string]string{"message": "logged out"})
 }
 

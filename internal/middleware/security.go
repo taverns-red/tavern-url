@@ -18,7 +18,7 @@ func SecurityHeaders(next http.Handler) http.Handler {
 
 		// Content Security Policy.
 		w.Header().Set("Content-Security-Policy",
-			"default-src 'self'; script-src 'self' https://unpkg.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self'")
+			"default-src 'self'; script-src 'self' 'unsafe-inline' https://unpkg.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self'")
 
 		// Permissions policy — disable unnecessary features.
 		w.Header().Set("Permissions-Policy", "camera=(), microphone=(), geolocation=()")

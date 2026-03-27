@@ -3,6 +3,7 @@ package handler
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"strings"
 
@@ -45,9 +46,23 @@ type errorResponse struct {
 // Create handles POST /api/v1/links
 func (h *LinkHandler) Create(w http.ResponseWriter, r *http.Request) {
 	var req createLinkRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		writeJSON(w, http.StatusBadRequest, errorResponse{Error: "invalid JSON body"})
-		return
+	isForm := strings.HasPrefix(r.Header.Get("Content-Type"), "application/x-www-form-urlencoded")
+
+	if isForm {
+		if err := r.ParseForm(); err != nil {
+			writeJSON(w, http.StatusBadRequest, errorResponse{Error: "invalid form data"})
+			return
+		}
+		req.URL = r.FormValue("url")
+		slug := r.FormValue("slug")
+		if slug != "" {
+			req.Slug = &slug
+		}
+	} else {
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+			writeJSON(w, http.StatusBadRequest, errorResponse{Error: "invalid JSON body"})
+			return
+		}
 	}
 
 	if req.URL == "" {
@@ -66,6 +81,22 @@ func (h *LinkHandler) Create(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		writeJSON(w, http.StatusInternalServerError, errorResponse{Error: "internal server error"})
+		return
+	}
+
+	// For HTMX requests, re-render the full link list.
+	if isForm {
+		links, _ := h.svc.ListLinks(r.Context())
+		_ = link // used above
+		w.Header().Set("Content-Type", "text/html; charset=utf-8")
+		w.WriteHeader(http.StatusOK)
+		// Render a simple HTML snippet showing the new link.
+		fmt.Fprintf(w, `<div id="link-list"><div style="display:flex;flex-direction:column;gap:var(--space-3)">`)
+		for _, l := range links {
+			fmt.Fprintf(w, `<div class="card" style="display:flex;align-items:center;gap:var(--space-4);padding:var(--space-4) var(--space-6)"><div style="flex:1;min-width:0"><div style="display:flex;align-items:center;gap:var(--space-2);margin-bottom:var(--space-1)"><a href="%s/%s" target="_blank" style="font-weight:var(--font-weight-semibold);font-size:var(--font-size-base)">%s/%s</a></div><p style="color:var(--color-text-secondary);font-size:var(--font-size-sm);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">↳ %s</p></div><div style="display:flex;align-items:center;gap:var(--space-2)"><span class="text-sm text-muted">%s</span><button class="btn btn-ghost btn-danger" style="padding:var(--space-1) var(--space-2);min-height:auto;font-size:var(--font-size-xs)" hx-delete="/api/v1/links/%d" hx-target="#link-list" hx-swap="outerHTML" hx-confirm="Delete this link?">Delete</button></div></div>`,
+				h.baseURL, l.Slug, h.baseURL, l.Slug, l.OriginalURL, l.CreatedAt.Format("Jan 2, 2006"), l.ID)
+		}
+		fmt.Fprintf(w, `</div></div>`)
 		return
 	}
 
@@ -225,6 +256,25 @@ func (h *LinkHandler) Delete(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, http.StatusInternalServerError, errorResponse{Error: "internal server error"})
 		return
 	}
+
+	// For HTMX requests, re-render the link list.
+	if r.Header.Get("HX-Request") == "true" {
+		links, _ := h.svc.ListLinks(r.Context())
+		w.Header().Set("Content-Type", "text/html; charset=utf-8")
+		w.WriteHeader(http.StatusOK)
+		if len(links) == 0 {
+			fmt.Fprintf(w, `<div id="link-list"><div class="card" style="text-align:center;padding:var(--space-12)"><p style="font-size:var(--font-size-lg);color:var(--color-text-secondary);margin-bottom:var(--space-4)">No links yet</p><p style="color:var(--color-text-muted)">Create your first short link to get started.</p></div></div>`)
+		} else {
+			fmt.Fprintf(w, `<div id="link-list"><div style="display:flex;flex-direction:column;gap:var(--space-3)">`)
+			for _, l := range links {
+				fmt.Fprintf(w, `<div class="card" style="display:flex;align-items:center;gap:var(--space-4);padding:var(--space-4) var(--space-6)"><div style="flex:1;min-width:0"><div style="display:flex;align-items:center;gap:var(--space-2);margin-bottom:var(--space-1)"><a href="%s/%s" target="_blank" style="font-weight:var(--font-weight-semibold);font-size:var(--font-size-base)">%s/%s</a></div><p style="color:var(--color-text-secondary);font-size:var(--font-size-sm);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">↳ %s</p></div><div style="display:flex;align-items:center;gap:var(--space-2)"><span class="text-sm text-muted">%s</span><button class="btn btn-ghost btn-danger" style="padding:var(--space-1) var(--space-2);min-height:auto;font-size:var(--font-size-xs)" hx-delete="/api/v1/links/%d" hx-target="#link-list" hx-swap="outerHTML" hx-confirm="Delete this link?">Delete</button></div></div>`,
+					h.baseURL, l.Slug, h.baseURL, l.Slug, l.OriginalURL, l.CreatedAt.Format("Jan 2, 2006"), l.ID)
+			}
+			fmt.Fprintf(w, `</div></div>`)
+		}
+		return
+	}
+
 	writeJSON(w, http.StatusOK, map[string]string{"message": "link deleted"})
 }
 
