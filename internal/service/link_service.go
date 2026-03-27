@@ -85,12 +85,27 @@ func (s *LinkService) ListLinks(ctx context.Context) ([]model.Link, error) {
 	return s.repo.ListAll(ctx)
 }
 
-// UpdateLink updates a link's original URL.
-func (s *LinkService) UpdateLink(ctx context.Context, id int64, originalURL string) error {
-	if err := validateURL(originalURL); err != nil {
-		return fmt.Errorf("invalid URL: %w", err)
+// UpdateLink updates a link's original URL and/or slug.
+func (s *LinkService) UpdateLink(ctx context.Context, id int64, newURL *string, newSlug *string) (*model.Link, error) {
+	link, err := s.repo.GetByID(ctx, id)
+	if err != nil {
+		return nil, err
 	}
-	return s.repo.Update(ctx, id, originalURL)
+
+	if newURL != nil && *newURL != "" {
+		if err := validateURL(*newURL); err != nil {
+			return nil, fmt.Errorf("invalid URL: %w", err)
+		}
+		link.OriginalURL = *newURL
+	}
+	if newSlug != nil && *newSlug != "" {
+		link.Slug = *newSlug
+	}
+
+	if err := s.repo.Update(ctx, link.ID, link.OriginalURL); err != nil {
+		return nil, err
+	}
+	return link, nil
 }
 
 // validateURL checks that the URL is a valid HTTP or HTTPS URL.

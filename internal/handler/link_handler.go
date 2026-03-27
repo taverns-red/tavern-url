@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
+	"strings"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/taverns-red/tavern-url/internal/repository"
@@ -108,7 +109,7 @@ func (h *LinkHandler) Redirect(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, link.OriginalURL, http.StatusFound)
 }
 
-// List handles GET /api/v1/links
+// List handles GET /api/v1/links (optional ?q= search filter)
 func (h *LinkHandler) List(w http.ResponseWriter, r *http.Request) {
 	links, err := h.svc.ListLinks(r.Context())
 	if err != nil {
@@ -116,31 +117,104 @@ func (h *LinkHandler) List(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var resp []createLinkResponse
+	// Filter by search query if provided.
+	query := r.URL.Query().Get("q")
+	var filtered []createLinkResponse
 	for _, l := range links {
-		resp = append(resp, createLinkResponse{
+		if query != "" && !containsCI(l.Slug, query) && !containsCI(l.OriginalURL, query) {
+			continue
+		}
+		filtered = append(filtered, createLinkResponse{
 			ID:          l.ID,
 			Slug:        l.Slug,
 			ShortURL:    h.baseURL + "/" + l.Slug,
 			OriginalURL: l.OriginalURL,
 		})
 	}
-	if resp == nil {
-		resp = []createLinkResponse{}
+	if filtered == nil {
+		filtered = []createLinkResponse{}
 	}
-	writeJSON(w, http.StatusOK, resp)
+	writeJSON(w, http.StatusOK, filtered)
+}
+
+type updateLinkRequest struct {
+	URL  *string `json:"url,omitempty"`
+	Slug *string `json:"slug,omitempty"`
+}
+
+// Update handles PUT /api/v1/links/{id}
+func (h *LinkHandler) Update(w http.ResponseWriter, r *http.Request) {
+	idStr := chi.URLParam(r, "id")
+	id := parseID(idStr)
+	if id == 0 {
+		writeJSON(w, http.StatusBadRequest, errorResponse{Error: "invalid link ID"})
+		return
+	}
+
+	var req updateLinkRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		writeJSON(w, http.StatusBadRequest, errorResponse{Error: "invalid JSON body"})
+		return
+	}
+
+	link, err := h.svc.UpdateLink(r.Context(), id, req.URL, req.Slug)
+	if err != nil {
+		if errors.Is(err, repository.ErrLinkNotFound) {
+			writeJSON(w, http.StatusNotFound, errorResponse{Error: "link not found"})
+			return
+		}
+		writeJSON(w, http.StatusBadRequest, errorResponse{Error: err.Error()})
+		return
+	}
+
+	writeJSON(w, http.StatusOK, createLinkResponse{
+		ID:          link.ID,
+		Slug:        link.Slug,
+		ShortURL:    h.baseURL + "/" + link.Slug,
+		OriginalURL: link.OriginalURL,
+	})
+}
+
+type bulkCreateRequest struct {
+	URLs []string `json:"urls"`
+}
+
+// BulkCreate handles POST /api/v1/links/bulk
+func (h *LinkHandler) BulkCreate(w http.ResponseWriter, r *http.Request) {
+	var req bulkCreateRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		writeJSON(w, http.StatusBadRequest, errorResponse{Error: "invalid JSON body"})
+		return
+	}
+
+	if len(req.URLs) == 0 || len(req.URLs) > 100 {
+		writeJSON(w, http.StatusBadRequest, errorResponse{Error: "provide 1-100 URLs"})
+		return
+	}
+
+	var resp []createLinkResponse
+	for _, u := range req.URLs {
+		link, err := h.svc.CreateLink(r.Context(), u, nil)
+		if err != nil {
+			resp = append(resp, createLinkResponse{OriginalURL: u})
+			continue
+		}
+		resp = append(resp, createLinkResponse{
+			ID:          link.ID,
+			Slug:        link.Slug,
+			ShortURL:    h.baseURL + "/" + link.Slug,
+			OriginalURL: link.OriginalURL,
+		})
+	}
+	writeJSON(w, http.StatusCreated, resp)
 }
 
 // Delete handles DELETE /api/v1/links/{id}
 func (h *LinkHandler) Delete(w http.ResponseWriter, r *http.Request) {
-	idStr := chi.URLParam(r, "id")
-	var id int64
-	for _, c := range idStr {
-		if c < '0' || c > '9' {
-			writeJSON(w, http.StatusBadRequest, errorResponse{Error: "invalid link ID"})
-			return
-		}
-		id = id*10 + int64(c-'0')
+	id := parseID(chi.URLParam(r, "id"))
+	if id == 0 {
+		writeJSON(w, http.StatusBadRequest, errorResponse{Error: "invalid link ID"})
+		return
 	}
 
 	if err := h.svc.DeleteLink(r.Context(), id); err != nil {
@@ -152,6 +226,23 @@ func (h *LinkHandler) Delete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	writeJSON(w, http.StatusOK, map[string]string{"message": "link deleted"})
+}
+
+// parseID parses a string ID to int64 (returns 0 on invalid).
+func parseID(s string) int64 {
+	var id int64
+	for _, c := range s {
+		if c < '0' || c > '9' {
+			return 0
+		}
+		id = id*10 + int64(c-'0')
+	}
+	return id
+}
+
+// containsCI performs case-insensitive substring search.
+func containsCI(s, substr string) bool {
+	return contains(strings.ToLower(s), strings.ToLower(substr))
 }
 
 // writeJSON writes a JSON response with the given status code.
