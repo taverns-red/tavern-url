@@ -16,6 +16,7 @@ import (
 
 	"github.com/taverns-red/tavern-url/internal/auth"
 	"github.com/taverns-red/tavern-url/internal/handler"
+	tavmiddleware "github.com/taverns-red/tavern-url/internal/middleware"
 	"github.com/taverns-red/tavern-url/internal/repository"
 	"github.com/taverns-red/tavern-url/internal/service"
 )
@@ -85,6 +86,9 @@ func main() {
 	// Page handler for server-rendered pages.
 	pageHandler := handler.NewPageHandler(sessionStore, authSvc, linkSvc, analyticsSvc, baseURL)
 
+	// Rate limiter (60 req/min per IP for protected routes).
+	rateLimiter := tavmiddleware.NewRateLimiter(60, time.Minute)
+
 	// Set up router.
 	r := chi.NewRouter()
 	r.Use(chimiddleware.Logger)
@@ -112,6 +116,7 @@ func main() {
 		// Protected routes (session or API key).
 		r.Group(func(r chi.Router) {
 			r.Use(auth.RequireAuthOrAPIKey(sessionStore, authSvc, apiKeySvc))
+			r.Use(rateLimiter.Middleware(tavmiddleware.ByIP))
 			r.Get("/auth/me", authHandler.Me)
 			r.Post("/links", linkHandler.Create)
 			r.Get("/links", linkHandler.List)
@@ -120,6 +125,8 @@ func main() {
 			r.Get("/links/{id}/qr", analyticsHandler.QRCode)
 			r.Post("/orgs", orgHandler.Create)
 			r.Get("/orgs", orgHandler.List)
+			r.Post("/orgs/{slug}/invite", orgHandler.Invite)
+			r.Put("/orgs/{slug}/members/{memberID}/role", orgHandler.UpdateRole)
 			r.Post("/keys", apiKeyHandler.Create)
 			r.Get("/keys", apiKeyHandler.List)
 			r.Delete("/keys/{id}", apiKeyHandler.Delete)

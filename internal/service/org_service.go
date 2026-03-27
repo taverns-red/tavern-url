@@ -60,3 +60,61 @@ func (s *OrgService) GetOrg(ctx context.Context, orgID int64, userID int64) (*mo
 	}
 	return s.orgRepo.GetByID(ctx, orgID)
 }
+
+// InviteMember invites a user to an org by email.
+// The inviting user must be an owner or admin.
+func (s *OrgService) InviteMember(ctx context.Context, orgSlug string, inviterID int64, email string, role string) error {
+	if role != "admin" && role != "member" {
+		return fmt.Errorf("role must be 'admin' or 'member'")
+	}
+
+	org, err := s.orgRepo.GetBySlug(ctx, orgSlug)
+	if err != nil {
+		return fmt.Errorf("org not found")
+	}
+
+	// Verify inviter has permission (must be owner or admin).
+	membership, err := s.orgRepo.GetMembership(ctx, inviterID, org.ID)
+	if err != nil {
+		return fmt.Errorf("permission denied")
+	}
+	if membership.Role != "owner" && membership.Role != "admin" {
+		return fmt.Errorf("permission denied: only owners and admins can invite")
+	}
+
+	// Add the member (the repo handles upsert/invite).
+	return s.orgRepo.AddMember(ctx, org.ID, inviterID, model.Role(role))
+}
+
+// UpdateMemberRole changes a member's role.
+// Only owners and admins can change roles. Owners cannot be demoted.
+func (s *OrgService) UpdateMemberRole(ctx context.Context, orgSlug string, actorID int64, memberID int64, newRole string) error {
+	if newRole != "admin" && newRole != "member" {
+		return fmt.Errorf("role must be 'admin' or 'member'")
+	}
+
+	org, err := s.orgRepo.GetBySlug(ctx, orgSlug)
+	if err != nil {
+		return fmt.Errorf("org not found")
+	}
+
+	// Verify actor has permission.
+	actorMembership, err := s.orgRepo.GetMembership(ctx, actorID, org.ID)
+	if err != nil {
+		return fmt.Errorf("permission denied")
+	}
+	if actorMembership.Role != "owner" && actorMembership.Role != "admin" {
+		return fmt.Errorf("permission denied: only owners and admins can change roles")
+	}
+
+	// Verify target is a member.
+	targetMembership, err := s.orgRepo.GetMembership(ctx, memberID, org.ID)
+	if err != nil {
+		return fmt.Errorf("member not found")
+	}
+	if targetMembership.Role == "owner" {
+		return fmt.Errorf("cannot change the owner's role")
+	}
+
+	return s.orgRepo.UpdateMemberRole(ctx, org.ID, memberID, model.Role(newRole))
+}

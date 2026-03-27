@@ -32,4 +32,7 @@ type OrgRepository interface {
 
 	// AddMember adds a user to an org with the given role.
 	AddMember(ctx context.Context, userID, orgID int64, role model.Role) error
+
+	// UpdateMemberRole changes a member's role in an org.
+	UpdateMemberRole(ctx context.Context, orgID, userID int64, role model.Role) error
 }

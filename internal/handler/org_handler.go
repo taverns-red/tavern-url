@@ -3,7 +3,9 @@ package handler
 import (
 	"encoding/json"
 	"net/http"
+	"strconv"
 
+	"github.com/go-chi/chi/v5"
 	"github.com/taverns-red/tavern-url/internal/auth"
 	"github.com/taverns-red/tavern-url/internal/service"
 )
@@ -87,6 +89,82 @@ func (h *OrgHandler) List(w http.ResponseWriter, r *http.Request) {
 		resp = []orgResponse{} // Return empty array instead of null.
 	}
 	writeJSON(w, http.StatusOK, resp)
+}
+
+type inviteRequest struct {
+	Email string `json:"email"`
+	Role  string `json:"role"` // "admin" or "member"
+}
+
+// Invite handles POST /api/v1/orgs/{slug}/invite
+func (h *OrgHandler) Invite(w http.ResponseWriter, r *http.Request) {
+	user := auth.UserFromContext(r.Context())
+	if user == nil {
+		writeJSON(w, http.StatusUnauthorized, errorResponse{Error: "authentication required"})
+		return
+	}
+
+	slug := chi.URLParam(r, "slug")
+	var req inviteRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		writeJSON(w, http.StatusBadRequest, errorResponse{Error: "invalid JSON body"})
+		return
+	}
+	if req.Email == "" {
+		writeJSON(w, http.StatusBadRequest, errorResponse{Error: "email is required"})
+		return
+	}
+	if req.Role == "" {
+		req.Role = "member"
+	}
+
+	if err := h.orgSvc.InviteMember(r.Context(), slug, user.ID, req.Email, req.Role); err != nil {
+		if containsMsg(err, "not found") || containsMsg(err, "permission") {
+			writeJSON(w, http.StatusForbidden, errorResponse{Error: err.Error()})
+			return
+		}
+		writeJSON(w, http.StatusInternalServerError, errorResponse{Error: "failed to invite member"})
+		return
+	}
+
+	writeJSON(w, http.StatusOK, map[string]string{"message": "invitation sent"})
+}
+
+type updateRoleRequest struct {
+	Role string `json:"role"`
+}
+
+// UpdateRole handles PUT /api/v1/orgs/{slug}/members/{memberID}/role
+func (h *OrgHandler) UpdateRole(w http.ResponseWriter, r *http.Request) {
+	user := auth.UserFromContext(r.Context())
+	if user == nil {
+		writeJSON(w, http.StatusUnauthorized, errorResponse{Error: "authentication required"})
+		return
+	}
+
+	slug := chi.URLParam(r, "slug")
+	memberID, err := strconv.ParseInt(chi.URLParam(r, "memberID"), 10, 64)
+	if err != nil {
+		writeJSON(w, http.StatusBadRequest, errorResponse{Error: "invalid member ID"})
+		return
+	}
+
+	var req updateRoleRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		writeJSON(w, http.StatusBadRequest, errorResponse{Error: "invalid JSON body"})
+		return
+	}
+
+	if err := h.orgSvc.UpdateMemberRole(r.Context(), slug, user.ID, memberID, req.Role); err != nil {
+		if containsMsg(err, "permission") || containsMsg(err, "not found") {
+			writeJSON(w, http.StatusForbidden, errorResponse{Error: err.Error()})
+			return
+		}
+		writeJSON(w, http.StatusInternalServerError, errorResponse{Error: "failed to update role"})
+		return
+	}
+
+	writeJSON(w, http.StatusOK, map[string]string{"message": "role updated"})
 }
 
 // GoogleLogin handles GET /auth/google/login

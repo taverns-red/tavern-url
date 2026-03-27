@@ -82,6 +82,16 @@ func (m *mockOrgRepo) AddMember(ctx context.Context, userID, orgID int64, role m
 	return nil
 }
 
+func (m *mockOrgRepo) UpdateMemberRole(ctx context.Context, orgID, userID int64, role model.Role) error {
+	for i, mem := range m.memberships[userID] {
+		if mem.OrgID == orgID {
+			m.memberships[userID][i].Role = role
+			return nil
+		}
+	}
+	return repository.ErrOrgNotFound
+}
+
 func TestCreateOrg_Success(t *testing.T) {
 	svc := NewOrgService(newMockOrgRepo())
 	org, err := svc.CreateOrg(context.Background(), "Habitat for Humanity", "habitat", 1)

@@ -1,97 +1,103 @@
-# 🏠 Tavern URL
+# Tavern URL
 
-A free, open-source, privacy-first URL shortener for nonprofits and service organizations.
+> A free, open-source, privacy-first URL shortener built for nonprofits and service organizations.
 
-## Vision
+[![CI](https://github.com/taverns-red/tavern-url/actions/workflows/ci.yml/badge.svg)](https://github.com/taverns-red/tavern-url/actions/workflows/ci.yml)
 
-**Extreme simplicity combined with deep control.** Tavern URL gives nonprofit and service organizations the power of enterprise link management — custom slugs, aggregate analytics, QR codes, team management — without surveillance, complexity, or cost.
+## Features
 
-## Features (Planned — v1)
-
-- **Custom & auto-generated short links** — branded slugs or 6-char Base62 codes
-- **Privacy-first analytics** — aggregate clicks, geo (country), device, referrer domain. No cookies, no PII.
-- **QR code generation** — PNG/SVG download with customizable colors
-- **Multi-user & teams** — orgs, roles (Owner/Admin/Member), API keys
-- **Third-party auth** — Google OAuth 2.0 alongside email/password
-- **Beautiful web UI** — responsive, accessible, fast
+- **Short links** with auto-generated Base62 slugs or custom vanity URLs
+- **Privacy-first analytics** — country, device, referrer (no PII, no cookies, no fingerprinting)
+- **QR code generation** — PNG with custom foreground/background colors
+- **Multi-user** with organizations, roles (owner/admin/member), and invites
+- **Dual authentication** — session cookies and API keys (`tvn_` prefix, SHA-256 hashed)
+- **Rate limiting** — configurable per-IP token bucket (60 req/min default)
+- **Server-rendered UI** — HTMX + Templ templates, zero JavaScript frameworks
 
 ## Tech Stack
 
 | Layer | Technology |
-|-------|-----------|
-| Backend | Go |
-| Frontend | HTMX + Templ |
-| Database | PostgreSQL |
-| Auth | OAuth 2.0 (Google) + bcrypt |
-| CSS | Vanilla CSS (custom properties) |
+|-------|------------|
+| Language | Go 1.23 |
+| Router | chi/v5 |
+| Database | PostgreSQL (pgx/v5) |
+| Frontend | Templ + HTMX |
+| QR Codes | skip2/go-qrcode |
+| Auth | bcrypt + Google OAuth 2.0 |
+| Deploy | Docker + Fly.io |
 
-## Getting Started
-
-### Prerequisites
-
-- [Go](https://go.dev/dl/) 1.22+
-- [Templ](https://templ.guide/quick-start/installation) CLI
-- [PostgreSQL](https://www.postgresql.org/download/) 15+
-- [Docker](https://docs.docker.com/get-docker/) (optional, for containerized dev)
-
-### Local Development
+## Quickstart
 
 ```bash
 # Clone
 git clone https://github.com/taverns-red/tavern-url.git
 cd tavern-url
 
-# Start Postgres (via Docker)
-docker compose up -d db
-
-# Copy env file and configure
-cp .env.example .env
+# Start PostgreSQL
+docker compose up -d
 
 # Run migrations
-make migrate
+goose -dir migrations postgres "postgres://tavern:tavern_dev@localhost:5432/tavern?sslmode=disable" up
 
-# Generate Templ files and run
+# Start the server
 make dev
+# → http://localhost:8080
 ```
 
-### Docker
+## Configuration
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `DATABASE_URL` | (required) | PostgreSQL connection string |
+| `PORT` | `8080` | HTTP server port |
+| `BASE_URL` | `http://localhost:8080` | Public URL for short links |
+| `SESSION_SECRET` | (required) | 32+ char secret for session cookies |
+| `GOOGLE_CLIENT_ID` | (optional) | Google OAuth client ID |
+| `GOOGLE_CLIENT_SECRET` | (optional) | Google OAuth client secret |
+
+## API
+
+All endpoints return JSON. Authentication via session cookie or `Authorization: Bearer tvn_...` header.
+
+### Links
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `POST` | `/api/v1/links` | Create a short link |
+| `GET` | `/api/v1/links` | List all links |
+| `DELETE` | `/api/v1/links/{id}` | Delete a link |
+| `GET` | `/api/v1/links/{id}/analytics` | Get link analytics |
+| `GET` | `/api/v1/links/{id}/qr` | Generate QR code (PNG) |
+
+### API Keys
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `POST` | `/api/v1/keys` | Create an API key |
+| `GET` | `/api/v1/keys` | List your API keys |
+| `DELETE` | `/api/v1/keys/{id}` | Delete an API key |
+
+### Organizations
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `POST` | `/api/v1/orgs` | Create an org |
+| `GET` | `/api/v1/orgs` | List your orgs |
+| `POST` | `/api/v1/orgs/{slug}/invite` | Invite a member |
+| `PUT` | `/api/v1/orgs/{slug}/members/{id}/role` | Change member role |
+
+## Deploy to Fly.io
 
 ```bash
-docker compose up
-```
-
-## Project Structure
-
-```
-tavern-url/
-├── cmd/tavern/          # Application entrypoint
-├── internal/
-│   ├── handler/         # HTTP handlers
-│   ├── service/         # Business logic
-│   ├── repository/      # Database access
-│   ├── model/           # Domain types
-│   ├── auth/            # Authentication
-│   └── middleware/       # Rate limiting, logging, etc.
-├── templates/           # Templ components
-├── static/              # CSS, images
-├── migrations/          # SQL migrations
-├── tasks/               # Engineering process docs
-└── docs/                # Product & architecture docs
+fly launch
+fly secrets set DATABASE_URL="..." SESSION_SECRET="..." GOOGLE_CLIENT_ID="..." GOOGLE_CLIENT_SECRET="..."
+fly deploy
 ```
 
 ## Contributing
 
-We welcome contributions! This is a nonprofit project — every PR helps organizations that serve their communities.
-
-1. Fork the repo
-2. Create a feature branch (`git checkout -b feat/my-feature`)
-3. Follow the [engineering workflow](docs/product-spec.md) — TDD, small commits, issue-driven
-4. Open a PR referencing the issue number
+See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## License
 
-[MIT](LICENSE) — free to use, modify, and distribute.
-
-## About
-
-Built by [Taverns Red](https://github.com/taverns-red) — a not-for-profit offering free and low-cost technology for service organizations.
+MIT — see [LICENSE](LICENSE).

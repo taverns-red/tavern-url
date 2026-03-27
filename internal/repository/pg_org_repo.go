@@ -136,3 +136,12 @@ func (r *PgOrgRepository) AddMember(ctx context.Context, userID, orgID int64, ro
 	)
 	return err
 }
+
+// UpdateMemberRole changes a member's role in an org.
+func (r *PgOrgRepository) UpdateMemberRole(ctx context.Context, orgID, userID int64, role model.Role) error {
+	_, err := r.pool.Exec(ctx,
+		`UPDATE memberships SET role = $1 WHERE org_id = $2 AND user_id = $3`,
+		string(role), orgID, userID,
+	)
+	return err
+}
