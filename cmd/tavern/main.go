@@ -38,21 +38,42 @@ func main() {
 	}
 	defer pool.Close()
 
-	// Verify connection.
 	if err := pool.Ping(ctx); err != nil {
 		log.Fatalf("failed to ping database: %v", err)
 	}
 	log.Println("connected to database")
 
-	// Wire layers.
+	// Wire repositories.
 	linkRepo := repository.NewPgLinkRepository(pool)
 	userRepo := repository.NewPgUserRepository(pool)
+	orgRepo := repository.NewPgOrgRepository(pool)
+
+	// Wire services.
 	linkSvc := service.NewLinkService(linkRepo)
 	authSvc := auth.NewService(userRepo)
+	orgSvc := service.NewOrgService(orgRepo)
 	sessionStore := auth.NewSessionStore(sessionSecret)
 
+	// Wire handlers.
 	linkHandler := handler.NewLinkHandler(linkSvc, baseURL)
 	authHandler := handler.NewAuthHandler(authSvc, sessionStore)
+	orgHandler := handler.NewOrgHandler(orgSvc)
+
+	// Google OAuth (optional — only if credentials are configured).
+	var googleHandler *handler.GoogleLoginHandler
+	googleClientID := os.Getenv("GOOGLE_CLIENT_ID")
+	googleClientSecret := os.Getenv("GOOGLE_CLIENT_SECRET")
+	if googleClientID != "" && googleClientSecret != "" {
+		googleProvider := auth.NewGoogleProvider(auth.GoogleOAuthConfig{
+			ClientID:     googleClientID,
+			ClientSecret: googleClientSecret,
+			RedirectURL:  baseURL + "/auth/google/callback",
+		}, userRepo)
+		googleHandler = handler.NewGoogleLoginHandler(googleProvider, sessionStore)
+		log.Println("Google OAuth enabled")
+	} else {
+		log.Println("Google OAuth disabled (GOOGLE_CLIENT_ID/GOOGLE_CLIENT_SECRET not set)")
+	}
 
 	// Set up router.
 	r := chi.NewRouter()
@@ -68,18 +89,26 @@ func main() {
 		r.Post("/auth/login", authHandler.Login)
 		r.Post("/auth/logout", authHandler.Logout)
 
-		// Protected auth routes.
+		// Protected routes.
 		r.Group(func(r chi.Router) {
 			r.Use(auth.RequireAuth(sessionStore, authSvc))
 			r.Get("/auth/me", authHandler.Me)
 			r.Post("/links", linkHandler.Create)
+			r.Post("/orgs", orgHandler.Create)
+			r.Get("/orgs", orgHandler.List)
 		})
 	})
+
+	// Google OAuth routes (if enabled).
+	if googleHandler != nil {
+		r.Get("/auth/google/login", googleHandler.Login)
+		r.Get("/auth/google/callback", googleHandler.Callback)
+	}
 
 	// Health check.
 	r.Get("/health", handler.Health)
 
-	// Redirect — must be last to avoid catching API routes.
+	// Redirect — must be last.
 	r.Get("/{slug}", linkHandler.Redirect)
 
 	// Start server with graceful shutdown.
@@ -91,7 +120,6 @@ func main() {
 		IdleTimeout:  120 * time.Second,
 	}
 
-	// Run server in a goroutine.
 	go func() {
 		log.Printf("tavern-url listening on %s", srv.Addr)
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
@@ -99,13 +127,11 @@ func main() {
 		}
 	}()
 
-	// Wait for interrupt signal.
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit
 	log.Println("shutting down server...")
 
-	// Graceful shutdown with 30s timeout.
 	shutdownCtx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
