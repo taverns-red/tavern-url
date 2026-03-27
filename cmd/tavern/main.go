@@ -75,12 +75,24 @@ func main() {
 		log.Println("Google OAuth disabled (GOOGLE_CLIENT_ID/GOOGLE_CLIENT_SECRET not set)")
 	}
 
+	// Page handler for server-rendered pages.
+	pageHandler := handler.NewPageHandler(sessionStore, authSvc)
+
 	// Set up router.
 	r := chi.NewRouter()
 	r.Use(chimiddleware.Logger)
 	r.Use(chimiddleware.Recoverer)
 	r.Use(chimiddleware.RequestID)
 	r.Use(chimiddleware.RealIP)
+
+	// Static files.
+	r.Handle("/static/*", handler.StaticFileServer("static"))
+
+	// Page routes (server-rendered HTML).
+	r.Get("/", pageHandler.Home)
+	r.Get("/login", pageHandler.Login)
+	r.Get("/register", pageHandler.Register)
+	r.Get("/dashboard", pageHandler.Dashboard)
 
 	// API routes.
 	r.Route("/api/v1", func(r chi.Router) {
@@ -108,7 +120,7 @@ func main() {
 	// Health check.
 	r.Get("/health", handler.Health)
 
-	// Redirect — must be last.
+	// Redirect — must be last to avoid catching page routes.
 	r.Get("/{slug}", linkHandler.Redirect)
 
 	// Start server with graceful shutdown.

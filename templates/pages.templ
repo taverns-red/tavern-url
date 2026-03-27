@@ -1,0 +1,104 @@
+package templates
+
+// LoginPage renders the login form.
+templ LoginPage(errorMsg string) {
+	@Layout("Log in", false) {
+		<div class="auth-page">
+			<div class="auth-card">
+				<div class="card">
+					<h1 class="auth-title">Welcome back</h1>
+					<p class="auth-subtitle">Log in to manage your short links</p>
+					if errorMsg != "" {
+						<div class="alert alert-error">{ errorMsg }</div>
+					}
+					<form class="auth-form" hx-post="/api/v1/auth/login" hx-target="#login-error" hx-swap="innerHTML">
+						<div class="form-group">
+							<label class="form-label" for="email">Email</label>
+							<input class="form-input" type="email" id="email" name="email" placeholder="you@example.org" required autofocus/>
+						</div>
+						<div class="form-group">
+							<label class="form-label" for="password">Password</label>
+							<input class="form-input" type="password" id="password" name="password" placeholder="••••••••" required/>
+						</div>
+						<div id="login-error"></div>
+						<button type="submit" class="btn btn-primary btn-full btn-lg">
+							<span class="htmx-hide-on-request">Log in</span>
+							<span class="htmx-indicator spinner"></span>
+						</button>
+					</form>
+					<div class="auth-divider">or</div>
+					<a href="/auth/google/login" class="btn btn-google btn-full btn-lg">
+						Continue with Google
+					</a>
+					<div class="auth-footer">
+						Don't have an account? <a href="/register">Sign up</a>
+					</div>
+				</div>
+			</div>
+		</div>
+	}
+}
+
+// RegisterPage renders the registration form.
+templ RegisterPage(errorMsg string) {
+	@Layout("Sign up", false) {
+		<div class="auth-page">
+			<div class="auth-card">
+				<div class="card">
+					<h1 class="auth-title">Create your account</h1>
+					<p class="auth-subtitle">Start shortening links for your organization</p>
+					if errorMsg != "" {
+						<div class="alert alert-error">{ errorMsg }</div>
+					}
+					<form class="auth-form" hx-post="/api/v1/auth/register" hx-target="#register-error" hx-swap="innerHTML">
+						<div class="form-group">
+							<label class="form-label" for="name">Full name</label>
+							<input class="form-input" type="text" id="name" name="name" placeholder="Alice Johnson" required autofocus/>
+						</div>
+						<div class="form-group">
+							<label class="form-label" for="email">Email</label>
+							<input class="form-input" type="email" id="email" name="email" placeholder="you@example.org" required/>
+						</div>
+						<div class="form-group">
+							<label class="form-label" for="password">Password</label>
+							<input class="form-input" type="password" id="password" name="password" placeholder="At least 8 characters" required minlength="8"/>
+							<span class="form-hint">Must be at least 8 characters</span>
+						</div>
+						<div id="register-error"></div>
+						<button type="submit" class="btn btn-primary btn-full btn-lg">
+							<span class="htmx-hide-on-request">Create account</span>
+							<span class="htmx-indicator spinner"></span>
+						</button>
+					</form>
+					<div class="auth-divider">or</div>
+					<a href="/auth/google/login" class="btn btn-google btn-full btn-lg">
+						Continue with Google
+					</a>
+					<div class="auth-footer">
+						Already have an account? <a href="/login">Log in</a>
+					</div>
+				</div>
+			</div>
+		</div>
+	}
+}
+
+// HomePage renders the public landing page.
+templ HomePage() {
+	@Layout("Privacy-first URL Shortener", false) {
+		<div class="auth-page">
+			<div style="text-align:center;max-width:600px">
+				<h1 style="font-size:var(--font-size-4xl);font-weight:var(--font-weight-bold);margin-bottom:var(--space-4);background:linear-gradient(135deg,var(--color-primary),var(--color-secondary));-webkit-background-clip:text;-webkit-text-fill-color:transparent">
+					Shorten links.<br/>Respect privacy.
+				</h1>
+				<p style="font-size:var(--font-size-lg);color:var(--color-text-secondary);margin-bottom:var(--space-8);line-height:var(--line-height-relaxed)">
+					A free, open-source URL shortener built for nonprofits and service organizations. No tracking. No cookies. Just links.
+				</p>
+				<div style="display:flex;gap:var(--space-3);justify-content:center;flex-wrap:wrap">
+					<a href="/register" class="btn btn-primary btn-lg">Get started free</a>
+					<a href="https://github.com/taverns-red/tavern-url" class="btn btn-secondary btn-lg" target="_blank" rel="noopener">View on GitHub</a>
+				</div>
+			</div>
+		</div>
+	}
+}

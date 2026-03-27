@@ -3,6 +3,7 @@ module github.com/taverns-red/tavern-url
 go 1.25.6
 
 require (
+	github.com/a-h/templ v0.3.1001
 	github.com/go-chi/chi/v5 v5.2.5
 	github.com/gorilla/sessions v1.4.0
 	github.com/jackc/pgx/v5 v5.9.1
