@@ -11,6 +11,7 @@ templ Layout(title string, isAuthenticated bool) {
 			<title>{ title } — Tavern URL</title>
 			<link rel="stylesheet" href="/static/styles.css"/>
 			<script src="https://unpkg.com/htmx.org@2.0.4" integrity="sha384-HGfztofotfshcF7+8n44JQL2oJmowVChPTg48S+jvZoztPfvwD79OC/LTtG6dMp+" crossorigin="anonymous"></script>
+			<script src="/static/app.js" defer></script>
 		</head>
 		<body>
 			<div class="app-layout">
@@ -26,7 +27,7 @@ templ Layout(title string, isAuthenticated bool) {
 						<nav class="header__nav">
 							if isAuthenticated {
 								<a href="/dashboard">Dashboard</a>
-								<a href="#" hx-post="/api/v1/auth/logout" hx-swap="none" hx-on::after-request="window.location='/'">Logout</a>
+								<a href="#" hx-post="/api/v1/auth/logout" hx-swap="none">Logout</a>
 							} else {
 								<a href="/login">Log in</a>
 								<a href="/register" class="btn btn-primary">Sign up</a>

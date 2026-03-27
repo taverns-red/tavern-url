@@ -47,7 +47,7 @@ func DashboardPage(links []model.Link, baseURL string) templ.Component {
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div style=\"display:flex;justify-content:space-between;align-items:center;margin-bottom:var(--space-6)\"><h1 style=\"font-size:var(--font-size-2xl);font-weight:var(--font-weight-bold)\">Your Links</h1><button class=\"btn btn-primary\" onclick=\"document.getElementById('create-modal').style.display='flex'\">+ New Link</button></div><!-- Create Link Modal --> <div id=\"create-modal\" style=\"display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:200;align-items:center;justify-content:center;padding:var(--space-4)\"><div class=\"card\" style=\"max-width:500px;width:100%;padding:var(--space-8)\"><h2 style=\"font-size:var(--font-size-xl);font-weight:var(--font-weight-semibold);margin-bottom:var(--space-4)\">Create Short Link</h2><form class=\"auth-form\" hx-post=\"/api/v1/links\" hx-target=\"#link-list\" hx-swap=\"outerHTML\" hx-on::after-request=\"if(event.detail.successful){document.getElementById('create-modal').style.display='none';this.reset()}\"><div class=\"form-group\"><label class=\"form-label\" for=\"url\">Destination URL</label> <input class=\"form-input\" type=\"url\" id=\"url\" name=\"url\" placeholder=\"https://www.habitat.org/donate\" required></div><div class=\"form-group\"><label class=\"form-label\" for=\"slug\">Custom slug <span class=\"text-muted\">(optional)</span></label> <input class=\"form-input\" type=\"text\" id=\"slug\" name=\"slug\" placeholder=\"spring-gala\" minlength=\"3\" maxlength=\"64\"> <span class=\"form-hint\">3–64 chars, letters, numbers, and hyphens</span></div><div id=\"create-error\"></div><div style=\"display:flex;gap:var(--space-3);justify-content:flex-end\"><button type=\"button\" class=\"btn btn-secondary\" onclick=\"document.getElementById('create-modal').style.display='none'\">Cancel</button> <button type=\"submit\" class=\"btn btn-primary\"><span class=\"htmx-hide-on-request\">Create</span> <span class=\"htmx-indicator spinner\"></span></button></div></form></div></div><!-- Link List --> <div id=\"link-list\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div style=\"display:flex;justify-content:space-between;align-items:center;margin-bottom:var(--space-6)\"><h1 style=\"font-size:var(--font-size-2xl);font-weight:var(--font-weight-bold)\">Your Links</h1><button class=\"btn btn-primary\" data-modal-open=\"create-modal\">+ New Link</button></div><!-- Create Link Modal --> <div id=\"create-modal\" style=\"display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:200;align-items:center;justify-content:center;padding:var(--space-4)\"><div class=\"card\" style=\"max-width:500px;width:100%;padding:var(--space-8)\"><h2 style=\"font-size:var(--font-size-xl);font-weight:var(--font-weight-semibold);margin-bottom:var(--space-4)\">Create Short Link</h2><form class=\"auth-form\" hx-post=\"/api/v1/links\" hx-target=\"#link-list\" hx-swap=\"outerHTML\"><div class=\"form-group\"><label class=\"form-label\" for=\"url\">Destination URL</label> <input class=\"form-input\" type=\"url\" id=\"url\" name=\"url\" placeholder=\"https://www.habitat.org/donate\" required></div><div class=\"form-group\"><label class=\"form-label\" for=\"slug\">Custom slug <span class=\"text-muted\">(optional)</span></label> <input class=\"form-input\" type=\"text\" id=\"slug\" name=\"slug\" placeholder=\"spring-gala\" minlength=\"3\" maxlength=\"64\"> <span class=\"form-hint\">3–64 chars, letters, numbers, and hyphens</span></div><div id=\"create-error\"></div><div style=\"display:flex;gap:var(--space-3);justify-content:flex-end\"><button type=\"button\" class=\"btn btn-secondary\" data-modal-close=\"create-modal\">Cancel</button> <button type=\"submit\" class=\"btn btn-primary\"><span class=\"htmx-hide-on-request\">Create</span> <span class=\"htmx-indicator spinner\"></span></button></div></form></div></div><!-- Link List --> <div id=\"link-list\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -132,24 +132,20 @@ func LinkList(links []model.Link, baseURL string) templ.Component {
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 8, "</a> ")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 8, "</a> <button class=\"btn btn-ghost\" style=\"padding:var(--space-1);min-height:auto;font-size:var(--font-size-xs)\" data-copy=\"")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = templ.RenderScriptItems(ctx, templ_7745c5c3_Buffer, templ.ComponentScript{Call: fmt.Sprintf("navigator.clipboard.writeText('%s/%s');this.textContent='Copied!'", baseURL, link.Slug)})
+				var templ_7745c5c3_Var6 string
+				templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%s/%s", baseURL, link.Slug))
+				if templ_7745c5c3_Err != nil {
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/dashboard.templ`, Line: 68, Col: 167}
+				}
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, "<button class=\"btn btn-ghost\" style=\"padding:var(--space-1);min-height:auto;font-size:var(--font-size-xs)\" onclick=\"")
-				if templ_7745c5c3_Err != nil {
-					return templ_7745c5c3_Err
-				}
-				var templ_7745c5c3_Var6 templ.ComponentScript = templ.ComponentScript{Call: fmt.Sprintf("navigator.clipboard.writeText('%s/%s');this.textContent='Copied!'", baseURL, link.Slug)}
-				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var6.Call)
-				if templ_7745c5c3_Err != nil {
-					return templ_7745c5c3_Err
-				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 10, "\">Copy</button></div><p style=\"color:var(--color-text-secondary);font-size:var(--font-size-sm);overflow:hidden;text-overflow:ellipsis;white-space:nowrap\">↳ ")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, "\">Copy</button></div><p style=\"color:var(--color-text-secondary);font-size:var(--font-size-sm);overflow:hidden;text-overflow:ellipsis;white-space:nowrap\">↳ ")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -162,7 +158,7 @@ func LinkList(links []model.Link, baseURL string) templ.Component {
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 11, "</p></div><div style=\"display:flex;align-items:center;gap:var(--space-2)\"><span class=\"text-sm text-muted\">")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 10, "</p></div><div style=\"display:flex;align-items:center;gap:var(--space-2)\"><span class=\"text-sm text-muted\">")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -175,7 +171,7 @@ func LinkList(links []model.Link, baseURL string) templ.Component {
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 12, "</span> <button class=\"btn btn-ghost btn-danger\" style=\"padding:var(--space-1) var(--space-2);min-height:auto;font-size:var(--font-size-xs)\" hx-delete=\"")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 11, "</span> <button class=\"btn btn-ghost btn-danger\" style=\"padding:var(--space-1) var(--space-2);min-height:auto;font-size:var(--font-size-xs)\" hx-delete=\"")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -188,17 +184,17 @@ func LinkList(links []model.Link, baseURL string) templ.Component {
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 13, "\" hx-target=\"#link-list\" hx-swap=\"outerHTML\" hx-confirm=\"Delete this link?\">Delete</button></div></div>")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 12, "\" hx-target=\"#link-list\" hx-swap=\"outerHTML\" hx-confirm=\"Delete this link?\">Delete</button></div></div>")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 14, "</div>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 13, "</div>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 15, "</div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 14, "</div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

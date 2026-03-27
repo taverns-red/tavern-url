@@ -10,7 +10,7 @@ templ DashboardPage(links []model.Link, baseURL string) {
 	@Layout("Dashboard", true) {
 		<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:var(--space-6)">
 			<h1 style="font-size:var(--font-size-2xl);font-weight:var(--font-weight-bold)">Your Links</h1>
-			<button class="btn btn-primary" onclick="document.getElementById('create-modal').style.display='flex'">
+			<button class="btn btn-primary" data-modal-open="create-modal">
 				+ New Link
 			</button>
 		</div>
@@ -19,7 +19,7 @@ templ DashboardPage(links []model.Link, baseURL string) {
 		<div id="create-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:200;align-items:center;justify-content:center;padding:var(--space-4)">
 			<div class="card" style="max-width:500px;width:100%;padding:var(--space-8)">
 				<h2 style="font-size:var(--font-size-xl);font-weight:var(--font-weight-semibold);margin-bottom:var(--space-4)">Create Short Link</h2>
-				<form class="auth-form" hx-post="/api/v1/links" hx-target="#link-list" hx-swap="outerHTML" hx-on::after-request="if(event.detail.successful){document.getElementById('create-modal').style.display='none';this.reset()}">
+				<form class="auth-form" hx-post="/api/v1/links" hx-target="#link-list" hx-swap="outerHTML">
 					<div class="form-group">
 						<label class="form-label" for="url">Destination URL</label>
 						<input class="form-input" type="url" id="url" name="url" placeholder="https://www.habitat.org/donate" required/>
@@ -31,7 +31,7 @@ templ DashboardPage(links []model.Link, baseURL string) {
 					</div>
 					<div id="create-error"></div>
 					<div style="display:flex;gap:var(--space-3);justify-content:flex-end">
-						<button type="button" class="btn btn-secondary" onclick="document.getElementById('create-modal').style.display='none'">Cancel</button>
+						<button type="button" class="btn btn-secondary" data-modal-close="create-modal">Cancel</button>
 						<button type="submit" class="btn btn-primary">
 							<span class="htmx-hide-on-request">Create</span>
 							<span class="htmx-indicator spinner"></span>
@@ -65,7 +65,7 @@ templ LinkList(links []model.Link, baseURL string) {
 								<a href={ templ.URL(fmt.Sprintf("%s/%s", baseURL, link.Slug)) } target="_blank" style="font-weight:var(--font-weight-semibold);font-size:var(--font-size-base)">
 									{ fmt.Sprintf("%s/%s", baseURL, link.Slug) }
 								</a>
-								<button class="btn btn-ghost" style="padding:var(--space-1);min-height:auto;font-size:var(--font-size-xs)" onclick={ templ.ComponentScript{Call: fmt.Sprintf("navigator.clipboard.writeText('%s/%s');this.textContent='Copied!'", baseURL, link.Slug)} }>
+								<button class="btn btn-ghost" style="padding:var(--space-1);min-height:auto;font-size:var(--font-size-xs)" data-copy={ fmt.Sprintf("%s/%s", baseURL, link.Slug) }>
 									Copy
 								</button>
 							</div>

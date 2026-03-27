@@ -31,7 +31,7 @@ templ LinkDetailPage(link *model.Link, summary *model.ClickSummary, baseURL stri
 					<a href={ templ.URL(fmt.Sprintf("/api/v1/links/%d/qr?size=512", link.ID)) } class="btn btn-secondary" download>
 						Download QR
 					</a>
-					<button class="btn btn-ghost" onclick={ templ.ComponentScript{Call: fmt.Sprintf("navigator.clipboard.writeText('%s/%s');this.textContent='Copied!'", baseURL, link.Slug)} }>
+					<button class="btn btn-ghost" data-copy={ fmt.Sprintf("%s/%s", baseURL, link.Slug) }>
 						Copy Link
 					</button>
 				</div>
