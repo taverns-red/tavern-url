@@ -2,7 +2,9 @@ package handler
 
 import (
 	"net/http"
+	"strconv"
 
+	"github.com/go-chi/chi/v5"
 	"github.com/taverns-red/tavern-url/internal/auth"
 	"github.com/taverns-red/tavern-url/internal/service"
 	"github.com/taverns-red/tavern-url/templates"
@@ -13,12 +15,13 @@ type PageHandler struct {
 	sessionStore auth.SessionStore
 	authSvc      *auth.Service
 	linkSvc      *service.LinkService
+	analyticsSvc *service.AnalyticsService
 	baseURL      string
 }
 
 // NewPageHandler creates a new PageHandler.
-func NewPageHandler(sessionStore auth.SessionStore, authSvc *auth.Service, linkSvc *service.LinkService, baseURL string) *PageHandler {
-	return &PageHandler{sessionStore: sessionStore, authSvc: authSvc, linkSvc: linkSvc, baseURL: baseURL}
+func NewPageHandler(sessionStore auth.SessionStore, authSvc *auth.Service, linkSvc *service.LinkService, analyticsSvc *service.AnalyticsService, baseURL string) *PageHandler {
+	return &PageHandler{sessionStore: sessionStore, authSvc: authSvc, linkSvc: linkSvc, analyticsSvc: analyticsSvc, baseURL: baseURL}
 }
 
 func (h *PageHandler) isAuthenticated(r *http.Request) bool {
@@ -68,3 +71,34 @@ func (h *PageHandler) Dashboard(w http.ResponseWriter, r *http.Request) {
 
 	templates.DashboardPage(links, h.baseURL).Render(r.Context(), w)
 }
+
+// LinkDetail renders the link detail page with analytics.
+func (h *PageHandler) LinkDetail(w http.ResponseWriter, r *http.Request) {
+	if !h.isAuthenticated(r) {
+		http.Redirect(w, r, "/login", http.StatusFound)
+		return
+	}
+
+	slug := chi.URLParam(r, "slug")
+	link, err := h.linkSvc.GetBySlug(r.Context(), slug)
+	if err != nil {
+		http.NotFound(w, r)
+		return
+	}
+
+	days := 30
+	if d := r.URL.Query().Get("days"); d != "" {
+		if parsed, err := strconv.Atoi(d); err == nil && parsed > 0 && parsed <= 365 {
+			days = parsed
+		}
+	}
+
+	summary, err := h.analyticsSvc.GetSummary(r.Context(), link.ID, days)
+	if err != nil {
+		http.Error(w, "failed to load analytics", http.StatusInternalServerError)
+		return
+	}
+
+	templates.LinkDetailPage(link, summary, h.baseURL, days).Render(r.Context(), w)
+}
+

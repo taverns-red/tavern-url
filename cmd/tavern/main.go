@@ -83,7 +83,7 @@ func main() {
 	}
 
 	// Page handler for server-rendered pages.
-	pageHandler := handler.NewPageHandler(sessionStore, authSvc, linkSvc, baseURL)
+	pageHandler := handler.NewPageHandler(sessionStore, authSvc, linkSvc, analyticsSvc, baseURL)
 
 	// Set up router.
 	r := chi.NewRouter()
@@ -100,6 +100,7 @@ func main() {
 	r.Get("/login", pageHandler.Login)
 	r.Get("/register", pageHandler.Register)
 	r.Get("/dashboard", pageHandler.Dashboard)
+	r.Get("/links/{slug}", pageHandler.LinkDetail)
 
 	// API routes.
 	r.Route("/api/v1", func(r chi.Router) {

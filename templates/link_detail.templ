@@ -1,0 +1,143 @@
+package templates
+
+import (
+	"fmt"
+	"github.com/taverns-red/tavern-url/internal/model"
+)
+
+// LinkDetailPage renders the link detail page with analytics.
+templ LinkDetailPage(link *model.Link, summary *model.ClickSummary, baseURL string, days int) {
+	@Layout("Link Detail", true) {
+		<div style="margin-bottom:var(--space-6)">
+			<a href="/dashboard" style="color:var(--color-text-secondary);font-size:var(--font-size-sm)">← Back to dashboard</a>
+		</div>
+
+		<div class="card" style="margin-bottom:var(--space-6)">
+			<div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:var(--space-4)">
+				<div style="flex:1;min-width:0">
+					<h1 style="font-size:var(--font-size-2xl);font-weight:var(--font-weight-bold);margin-bottom:var(--space-2)">
+						<a href={ templ.URL(fmt.Sprintf("%s/%s", baseURL, link.Slug)) } target="_blank">
+							{ fmt.Sprintf("%s/%s", baseURL, link.Slug) }
+						</a>
+					</h1>
+					<p style="color:var(--color-text-secondary);font-size:var(--font-size-sm);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:600px">
+						↳ { link.OriginalURL }
+					</p>
+					<p style="color:var(--color-text-muted);font-size:var(--font-size-xs);margin-top:var(--space-2)">
+						Created { link.CreatedAt.Format("Jan 2, 2006 at 3:04 PM") }
+					</p>
+				</div>
+				<div style="display:flex;gap:var(--space-2)">
+					<a href={ templ.URL(fmt.Sprintf("/api/v1/links/%d/qr?size=512", link.ID)) } class="btn btn-secondary" download>
+						Download QR
+					</a>
+					<button class="btn btn-ghost" onclick={ templ.ComponentScript{Call: fmt.Sprintf("navigator.clipboard.writeText('%s/%s');this.textContent='Copied!'", baseURL, link.Slug)} }>
+						Copy Link
+					</button>
+				</div>
+			</div>
+		</div>
+
+		<!-- Date range selector -->
+		<div style="display:flex;gap:var(--space-2);margin-bottom:var(--space-6)">
+			for _, d := range []int{7, 30, 90, 365} {
+				if d == days {
+					<a href={ templ.URL(fmt.Sprintf("/links/%s?days=%d", link.Slug, d)) } class="btn btn-primary" style="font-size:var(--font-size-sm);padding:var(--space-1) var(--space-3);min-height:auto">
+						{ fmt.Sprintf("%dd", d) }
+					</a>
+				} else {
+					<a href={ templ.URL(fmt.Sprintf("/links/%s?days=%d", link.Slug, d)) } class="btn btn-secondary" style="font-size:var(--font-size-sm);padding:var(--space-1) var(--space-3);min-height:auto">
+						{ fmt.Sprintf("%dd", d) }
+					</a>
+				}
+			}
+		</div>
+
+		<!-- Total clicks -->
+		<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:var(--space-4);margin-bottom:var(--space-6)">
+			<div class="card" style="text-align:center">
+				<div style="font-size:var(--font-size-3xl);font-weight:var(--font-weight-bold);color:var(--color-primary)">
+					{ fmt.Sprintf("%d", summary.TotalClicks) }
+				</div>
+				<div style="font-size:var(--font-size-sm);color:var(--color-text-secondary)">Total Clicks</div>
+			</div>
+			<div class="card" style="text-align:center">
+				<div style="font-size:var(--font-size-3xl);font-weight:var(--font-weight-bold);color:var(--color-secondary)">
+					{ fmt.Sprintf("%d", len(summary.ByCountry)) }
+				</div>
+				<div style="font-size:var(--font-size-sm);color:var(--color-text-secondary)">Countries</div>
+			</div>
+			<div class="card" style="text-align:center">
+				<div style="font-size:var(--font-size-3xl);font-weight:var(--font-weight-bold);color:var(--color-accent)">
+					{ fmt.Sprintf("%d", len(summary.ByReferrer)) }
+				</div>
+				<div style="font-size:var(--font-size-sm);color:var(--color-text-secondary)">Referrers</div>
+			</div>
+		</div>
+
+		<!-- Clicks over time (bar chart) -->
+		if len(summary.ByDay) > 0 {
+			<div class="card" style="margin-bottom:var(--space-6)">
+				<h2 style="font-size:var(--font-size-lg);font-weight:var(--font-weight-semibold);margin-bottom:var(--space-4)">Clicks Over Time</h2>
+				<div style="display:flex;align-items:flex-end;gap:2px;height:120px;padding-bottom:var(--space-2)">
+					for _, day := range summary.ByDay {
+						<div style={ fmt.Sprintf("flex:1;background:var(--color-primary);border-radius:2px 2px 0 0;min-height:4px;height:%d%%;opacity:0.8;transition:opacity var(--transition-fast)", barHeight(day.Count, summary.ByDay)) } title={ fmt.Sprintf("%s: %d clicks", day.Date, day.Count) }></div>
+					}
+				</div>
+				<div style="display:flex;justify-content:space-between;font-size:var(--font-size-xs);color:var(--color-text-muted)">
+					<span>{ summary.ByDay[0].Date }</span>
+					<span>{ summary.ByDay[len(summary.ByDay)-1].Date }</span>
+				</div>
+			</div>
+		}
+
+		<!-- Breakdowns -->
+		<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:var(--space-4)">
+			@BreakdownCard("Top Countries", summary.ByCountry)
+			@BreakdownCard("Devices", summary.ByDevice)
+			@BreakdownCard("Top Referrers", summary.ByReferrer)
+		</div>
+	}
+}
+
+// BreakdownCard renders a category breakdown card.
+templ BreakdownCard(title string, items []model.CategoryCount) {
+	<div class="card">
+		<h3 style="font-size:var(--font-size-base);font-weight:var(--font-weight-semibold);margin-bottom:var(--space-3)">{ title }</h3>
+		if len(items) == 0 {
+			<p style="color:var(--color-text-muted);font-size:var(--font-size-sm)">No data yet</p>
+		} else {
+			<div style="display:flex;flex-direction:column;gap:var(--space-2)">
+				for _, item := range items {
+					<div style="display:flex;justify-content:space-between;align-items:center">
+						<span style="font-size:var(--font-size-sm)">{ item.Category }</span>
+						<span style="font-size:var(--font-size-sm);font-weight:var(--font-weight-medium);color:var(--color-text-secondary)">
+							{ fmt.Sprintf("%d", item.Count) }
+						</span>
+					</div>
+				}
+			</div>
+		}
+	</div>
+}
+
+// barHeight calculates bar height as a percentage of the max value.
+func barHeight(count int64, days []model.DayCount) int {
+	if len(days) == 0 || count == 0 {
+		return 4
+	}
+	var max int64
+	for _, d := range days {
+		if d.Count > max {
+			max = d.Count
+		}
+	}
+	if max == 0 {
+		return 4
+	}
+	pct := int(float64(count) / float64(max) * 100)
+	if pct < 4 {
+		pct = 4
+	}
+	return pct
+}
