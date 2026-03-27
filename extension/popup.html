@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tavern URL</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Inter', -apple-system, sans-serif; width: 320px; padding: 16px; background: #0f172a; color: #f1f5f9; }
+    h1 { font-size: 16px; font-weight: 600; color: #818cf8; margin-bottom: 12px; }
+    .form-group { margin-bottom: 12px; }
+    label { display: block; font-size: 12px; color: #94a3b8; margin-bottom: 4px; }
+    input { width: 100%; padding: 8px 12px; border: 1px solid #334155; border-radius: 6px; background: #1e293b; color: #f1f5f9; font-size: 14px; }
+    input:focus { outline: none; border-color: #818cf8; }
+    button { width: 100%; padding: 10px; border: none; border-radius: 6px; background: #6366f1; color: white; font-size: 14px; font-weight: 500; cursor: pointer; }
+    button:hover { background: #4f46e5; }
+    .result { margin-top: 12px; padding: 8px 12px; background: #1e293b; border-radius: 6px; font-size: 13px; word-break: break-all; display: none; }
+    .result.show { display: block; }
+    .result a { color: #818cf8; text-decoration: none; }
+    .status { font-size: 11px; color: #64748b; margin-top: 8px; text-align: center; }
+    .settings { margin-top: 12px; padding-top: 12px; border-top: 1px solid #334155; }
+  </style>
+</head>
+<body>
+  <h1>🔗 Tavern URL</h1>
+
+  <div class="settings" id="settings">
+    <div class="form-group">
+      <label for="apiKey">API Key</label>
+      <input type="password" id="apiKey" placeholder="tvn_...">
+    </div>
+    <div class="form-group">
+      <label for="baseUrl">Server URL</label>
+      <input type="url" id="baseUrl" placeholder="https://your-instance.fly.dev">
+    </div>
+    <button id="saveBtn">Save Settings</button>
+  </div>
+
+  <div id="shorten" style="display:none">
+    <div class="form-group">
+      <label>Current Page URL</label>
+      <input type="url" id="pageUrl" readonly>
+    </div>
+    <button id="shortenBtn">Shorten This Page</button>
+    <div class="result" id="result">
+      <a id="shortUrl" href="#" target="_blank"></a>
+    </div>
+  </div>
+
+  <p class="status" id="status"></p>
+
+  <script src="popup.js"></script>
+</body>
+</html>
