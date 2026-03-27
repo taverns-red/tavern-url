@@ -36,3 +36,19 @@
 - SHA-256 hash storage means even a DB breach doesn't expose raw API keys.
 - Multi-stage Docker builds produce ~30MB images — Alpine is king for Go binaries.
 - Fly.io health checks at `/health` enable zero-downtime deploys with auto-start/stop.
+
+## Sprints 12-21: MVP Completion + Post-MVP
+- Dual-auth middleware (session OR API key) keeps handler code auth-agnostic.
+- Token bucket rate limiting is simpler than sliding window and sufficient for most use cases.
+- `embed.FS` can only embed from same package directory — use `fs.FS` interface to decouple.
+- In-memory rate limiters need periodic cleanup goroutines to prevent memory leaks.
+
+## Sprints 22-31: Growth + Platform
+- CSS custom properties make dark mode trivial — override variables, not selectors.
+- `prefers-color-scheme` + `[data-theme]` gives both auto-detect and manual toggle.
+- When changing a service method signature (e.g., `UpdateLink`), update all callers AND mocks simultaneously.
+- Browser extensions need `chrome.storage` not `localStorage` for data persistence.
+- HMAC-SHA256 webhook signatures prevent replay attacks — include event type in headers.
+- DNS TXT verification via `net.LookupTXT` works without any external dependencies.
+- `containsCI` (case-insensitive search) is better than adding DB-level ILIKE for small datasets.
+
