@@ -1,56 +1,37 @@
-.PHONY: dev build test lint clean migrate templ docker
+.PHONY: dev test vet build migrate templ docker
 
-# --- Development ---
+# Development
+dev:
+	DATABASE_URL="postgres://tavern:tavern_dev@localhost:5432/tavern?sslmode=disable" go run ./cmd/tavern/
 
-## Run the dev server with hot reload
-dev: templ
-	go run ./cmd/tavern/
+# Testing
+test:
+	go test ./... -count=1 -race
 
-## Generate Templ files
+# Linting
+vet:
+	go vet ./...
+
+# Build
+build:
+	go build -o tavern ./cmd/tavern/
+
+# Database migrations
+migrate:
+	goose -dir migrations postgres "postgres://tavern:tavern_dev@localhost:5432/tavern?sslmode=disable" up
+
+migrate-down:
+	goose -dir migrations postgres "postgres://tavern:tavern_dev@localhost:5432/tavern?sslmode=disable" down
+
+# Template generation
 templ:
 	templ generate
 
-## Run tests
-test:
-	go test ./... -v -count=1
-
-## Run tests with coverage
-test-cover:
-	go test ./... -coverprofile=coverage.out -count=1
-	go tool cover -html=coverage.out -o coverage.html
-	@echo "Coverage report: coverage.html"
-
-## Run linter
-lint:
-	golangci-lint run ./...
-
-# --- Build ---
-
-## Build the binary
-build: templ
-	CGO_ENABLED=0 go build -o bin/tavern ./cmd/tavern/
-
-## Build Docker image
-docker:
+# Docker
+docker-build:
 	docker build -t tavern-url .
 
-# --- Database ---
-
-## Run migrations up
-migrate:
-	goose -dir migrations postgres "$$DATABASE_URL" up
-
-## Roll back one migration
-migrate-down:
-	goose -dir migrations postgres "$$DATABASE_URL" down
-
-## Create a new migration
-migrate-create:
-	@read -p "Migration name: " name; \
-	goose -dir migrations create $$name sql
-
-# --- Cleanup ---
-
-## Remove build artifacts
-clean:
-	rm -rf bin/ coverage.out coverage.html tmp/
+docker-run:
+	docker run -p 8080:8080 \
+		-e DATABASE_URL="postgres://tavern:tavern_dev@host.docker.internal:5432/tavern?sslmode=disable" \
+		tavern-url

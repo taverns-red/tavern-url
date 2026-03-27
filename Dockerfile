@@ -1,31 +1,27 @@
 # Build stage
-FROM golang:1.22-alpine AS builder
+FROM golang:1.23-alpine AS builder
 
 RUN apk add --no-cache git
 
 WORKDIR /app
 
-# Install Templ
-RUN go install github.com/a-h/templ/cmd/templ@latest
-
-# Cache dependencies
 COPY go.mod go.sum ./
 RUN go mod download
 
-# Copy source
 COPY . .
+RUN CGO_ENABLED=0 GOOS=linux go build -o tavern ./cmd/tavern/
 
-# Generate Templ files and build
-RUN templ generate
-RUN CGO_ENABLED=0 GOOS=linux go build -o /tavern ./cmd/tavern/
+# Run stage
+FROM alpine:3.20
 
-# Runtime stage
-FROM gcr.io/distroless/static-debian12
+RUN apk add --no-cache ca-certificates tzdata
 
-COPY --from=builder /tavern /tavern
-COPY --from=builder /app/static /static
-COPY --from=builder /app/migrations /migrations
+WORKDIR /app
+
+COPY --from=builder /app/tavern .
+COPY --from=builder /app/static ./static
+COPY --from=builder /app/migrations ./migrations
 
 EXPOSE 8080
 
-ENTRYPOINT ["/tavern"]
+ENTRYPOINT ["./tavern"]
