@@ -6,7 +6,7 @@ import (
 )
 
 // LinkDetailPage renders the link detail page with analytics.
-templ LinkDetailPage(link *model.Link, summary *model.ClickSummary, baseURL string, days int) {
+templ LinkDetailPage(link *model.Link, summary *model.ClickSummary, baseURL string, days int, rules []model.RedirectRule) {
 	@Layout("Link Detail", true) {
 		<div style="margin-bottom:var(--space-6)">
 			<a href="/dashboard" style="color:var(--color-text-secondary);font-size:var(--font-size-sm)">← Back to dashboard</a>
@@ -95,12 +95,102 @@ templ LinkDetailPage(link *model.Link, summary *model.ClickSummary, baseURL stri
 		}
 
 		<!-- Breakdowns -->
-		<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:var(--space-4)">
+		<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:var(--space-4);margin-bottom:var(--space-6)">
 			@BreakdownCard("Top Countries", summary.ByCountry)
 			@BreakdownCard("Devices", summary.ByDevice)
 			@BreakdownCard("Top Referrers", summary.ByReferrer)
 		</div>
+
+		<!-- Redirect Rules -->
+		<div class="card" style="margin-bottom:var(--space-6)">
+			<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:var(--space-4)">
+				<h2 style="font-size:var(--font-size-lg);font-weight:var(--font-weight-semibold)">Redirect Rules</h2>
+				<button class="btn btn-primary" style="font-size:var(--font-size-sm);padding:var(--space-1) var(--space-3);min-height:auto" data-modal-open="add-rule-modal">
+					+ Add Rule
+				</button>
+			</div>
+			<div id="rule-list">
+				@RuleList(rules, link.ID)
+			</div>
+		</div>
+
+		<!-- Add Rule Modal -->
+		<div id="add-rule-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:200;align-items:center;justify-content:center;padding:var(--space-4)">
+			<div class="card" style="max-width:500px;width:100%;padding:var(--space-8)">
+				<h2 style="font-size:var(--font-size-xl);font-weight:var(--font-weight-semibold);margin-bottom:var(--space-4)">Add Redirect Rule</h2>
+				<form class="auth-form" hx-post={ fmt.Sprintf("/api/v1/links/%d/rules", link.ID) } hx-target="#rule-list" hx-swap="outerHTML">
+					<div class="form-group">
+						<label class="form-label" for="condition_type">Condition</label>
+						<select class="form-input" id="condition_type" name="condition_type" required>
+							<option value="geo_country">Country (Geo)</option>
+							<option value="device_type">Device Type</option>
+							<option value="weighted">Weighted (A/B Test)</option>
+						</select>
+					</div>
+					<div class="form-group">
+						<label class="form-label" for="condition_value">Value</label>
+						<input class="form-input" type="text" id="condition_value" name="condition_value" placeholder="e.g. US, mobile, or leave blank for weighted" required/>
+						<span class="form-hint">Country code (US, GB), device (mobile, tablet, desktop), or description</span>
+					</div>
+					<div class="form-group">
+						<label class="form-label" for="target_url">Target URL</label>
+						<input class="form-input" type="url" id="target_url" name="target_url" placeholder="https://example.com/us-version" required/>
+					</div>
+					<div class="form-group">
+						<label class="form-label" for="weight">Weight <span class="text-muted">(for A/B testing, 0-100)</span></label>
+						<input class="form-input" type="number" id="weight" name="weight" min="0" max="100" value="50"/>
+						<span class="form-hint">Percentage chance this rule fires (weighted rules only)</span>
+					</div>
+					<div id="add-rule-error"></div>
+					<div style="display:flex;gap:var(--space-3);justify-content:flex-end">
+						<button type="button" class="btn btn-secondary" data-modal-close="add-rule-modal">Cancel</button>
+						<button type="submit" class="btn btn-primary">
+							<span class="htmx-hide-on-request">Add Rule</span>
+							<span class="htmx-indicator spinner"></span>
+						</button>
+					</div>
+				</form>
+			</div>
+		</div>
 	}
+}
+
+// RuleList renders the redirect rules list (for HTMX partial swaps).
+templ RuleList(rules []model.RedirectRule, linkID int64) {
+	<div id="rule-list">
+		if len(rules) == 0 {
+			<p style="color:var(--color-text-muted);font-size:var(--font-size-sm)">No redirect rules configured. All visitors will be sent to the original URL.</p>
+		} else {
+			<div style="display:flex;flex-direction:column;gap:var(--space-2)">
+				for _, rule := range rules {
+					<div style="display:flex;align-items:center;justify-content:space-between;padding:var(--space-3);background:var(--color-background-secondary, var(--color-border));border-radius:var(--radius-md)">
+						<div>
+							<div style="display:flex;align-items:center;gap:var(--space-2);margin-bottom:var(--space-1)">
+								if rule.ConditionType == "geo_country" {
+									<span>🌍</span>
+								} else if rule.ConditionType == "device_type" {
+									<span>📱</span>
+								} else {
+									<span>⚖️</span>
+								}
+								<span style="font-weight:var(--font-weight-semibold);font-size:var(--font-size-sm)">{ rule.ConditionType }</span>
+								<span style="color:var(--color-text-muted);font-size:var(--font-size-sm)">= { rule.ConditionValue }</span>
+								if rule.ConditionType == "weighted" {
+									<span style="color:var(--color-text-muted);font-size:var(--font-size-xs)">({ fmt.Sprintf("%d%%", rule.Weight) })</span>
+								}
+							</div>
+							<div style="color:var(--color-text-secondary);font-size:var(--font-size-xs);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:400px">
+								→ { rule.TargetURL }
+							</div>
+						</div>
+						<button class="btn btn-ghost btn-danger" style="padding:var(--space-1) var(--space-2);min-height:auto;font-size:var(--font-size-xs)" hx-delete={ fmt.Sprintf("/api/v1/links/%d/rules/%d", linkID, rule.ID) } hx-target="#rule-list" hx-swap="outerHTML" hx-confirm="Delete this rule?">
+							Delete
+						</button>
+					</div>
+				}
+			</div>
+		}
+	</div>
 }
 
 // BreakdownCard renders a category breakdown card.

@@ -22,7 +22,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
   // ── Close modal on backdrop click ──
   document.addEventListener('click', function (e) {
-    var modalIds = ['create-modal', 'edit-modal', 'create-key-modal', 'create-org-modal', 'invite-modal'];
+    var modalIds = ['create-modal', 'edit-modal', 'create-key-modal', 'create-org-modal', 'invite-modal', 'add-rule-modal'];
     if (modalIds.indexOf(e.target.id) !== -1) {
       e.target.style.display = 'none';
     }
@@ -61,7 +61,7 @@ document.addEventListener('DOMContentLoaded', function () {
   // ── Close modal and reset form after successful HTMX request ──
   document.body.addEventListener('htmx:afterRequest', function (e) {
     if (e.detail.successful) {
-      var modalIds = ['create-modal', 'edit-modal', 'create-key-modal', 'create-org-modal', 'invite-modal'];
+      var modalIds = ['create-modal', 'edit-modal', 'create-key-modal', 'create-org-modal', 'invite-modal', 'add-rule-modal'];
       for (var i = 0; i < modalIds.length; i++) {
         var modal = e.detail.elt.closest('#' + modalIds[i]);
         if (modal) {

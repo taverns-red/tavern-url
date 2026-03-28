@@ -122,7 +122,7 @@ func (h *PageHandler) LinkDetail(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	templates.LinkDetailPage(link, summary, h.baseURL, days).Render(r.Context(), w)
+	templates.LinkDetailPage(link, summary, h.baseURL, days, nil).Render(r.Context(), w)
 }
 
 // APIKeys renders the API key management page.
