@@ -109,3 +109,9 @@
 - **Auth helpers are testable without mocking services.** extractBearerToken, UserIDFromContext, UserFromContext are pure functions that can be tested in the auth package without any service mocking.
 - **Existing test files may already exist.** Always check `find . -name '*_test.go'` before creating new test files. I almost recreated analytics_service_test.go.
 - **errcheck catches test ignoring return values.** Even in tests, golangci-lint catches unchecked errors. Use `_, _, _ = svc.Method()` to explicitly discard returns.
+
+## Sprint 68 (Handler & Auth Coverage Push)
+
+- **RequireAuth middleware is testable with real gorilla/sessions.** Use `NewSessionStore` with a test secret, `SetUserID` to write a cookie, then pass cookies to the middleware-wrapped handler. No HTTP server needed.
+- **Mock click repos can return hardcoded summaries.** Analytics handler tests don't need real data — a mock ClickRepository returning static ClickSummary objects is sufficient for handler-level testing.
+- **errcheck catches test setup ignoring returns.** Even one-line test setup like `store.SetUserID(w, req, 42)` must handle or explicitly discard the error return.
