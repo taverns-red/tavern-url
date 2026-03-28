@@ -52,3 +52,9 @@
 - DNS TXT verification via `net.LookupTXT` works without any external dependencies.
 - `containsCI` (case-insensitive search) is better than adding DB-level ILIKE for small datasets.
 
+## Sprint 32: Documentation & Stability
+- Product spec must be updated as features ship — "Shipped: None" after 31 sprints is a red flag.
+- HTMX form error display requires HTML responses, not JSON — use `writeFormError` for form submissions.
+- `strings.HasPrefix` for Content-Type detection handles charset suffixes (`; charset=utf-8`).
+- External JS with `data-*` attributes is CSP-safe and eliminates all inline `onclick` handlers.
+- Go version must be consistent across `go.mod`, `ci.yml`, `Dockerfile`, and `README.md`.
