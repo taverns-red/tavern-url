@@ -20,10 +20,13 @@ type GoogleOAuthConfig struct {
 	RedirectURL  string
 }
 
+const defaultUserInfoURL = "https://www.googleapis.com/oauth2/v2/userinfo"
+
 // GoogleProvider manages Google OAuth 2.0 authentication.
 type GoogleProvider struct {
-	config *oauth2.Config
-	users  repository.UserRepository
+	config      *oauth2.Config
+	users       repository.UserRepository
+	userInfoURL string // configurable for testing
 }
 
 // NewGoogleProvider creates a new GoogleProvider.
@@ -36,7 +39,8 @@ func NewGoogleProvider(cfg GoogleOAuthConfig, users repository.UserRepository) *
 			Scopes:       []string{"openid", "email", "profile"},
 			Endpoint:     google.Endpoint,
 		},
-		users: users,
+		users:       users,
+		userInfoURL: defaultUserInfoURL,
 	}
 }
 
@@ -59,7 +63,7 @@ func (g *GoogleProvider) HandleCallback(ctx context.Context, code string) (*mode
 	}
 
 	client := g.config.Client(ctx, token)
-	resp, err := client.Get("https://www.googleapis.com/oauth2/v2/userinfo")
+	resp, err := client.Get(g.userInfoURL)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get user info: %w", err)
 	}
