@@ -58,3 +58,10 @@
 - `strings.HasPrefix` for Content-Type detection handles charset suffixes (`; charset=utf-8`).
 - External JS with `data-*` attributes is CSP-safe and eliminates all inline `onclick` handlers.
 - Go version must be consistent across `go.mod`, `ci.yml`, `Dockerfile`, and `README.md`.
+
+## Sprint 33: UI Feature Parity
+- HTMX `hx-trigger="input changed delay:300ms"` gives debounced search without custom JS.
+- `hx-push-url="true"` keeps search queries in browser history — shareable/bookmarkable.
+- Edit modals need `htmx.process(form)` after dynamically setting `hx-put` via JS.
+- Templ components for HTMX partials (LinkList, APIKeyList) eliminate inline HTML in handlers.
+- When handler returns HTML for HTMX, don't set Content-Type — templ sets it automatically.
