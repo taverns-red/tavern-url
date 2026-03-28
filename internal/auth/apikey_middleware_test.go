@@ -233,3 +233,67 @@ func TestRequireAuthOrAPIKey_NoAuth(t *testing.T) {
 		t.Errorf("expected 401, got %d", w.Code)
 	}
 }
+
+func TestRequireAuthOrAPIKey_APIKeyAuth(t *testing.T) {
+	repo := newMockUserRepo()
+	authSvc := NewService(repo)
+	store := NewSessionStore("test-secret-key-32-bytes-long!!!")
+	apiKeyRepo := newMockAPIKeyRepoForAuth()
+	apiKeySvc := newAPIKeyServiceForAuth(apiKeyRepo)
+
+	// Register a user and create an API key.
+	user, err := authSvc.Register(context.Background(), "apikey-dual@test.com", "APIKey User", "password1234")
+	if err != nil {
+		t.Fatalf("register failed: %v", err)
+	}
+	rawKey, _, err := apiKeySvc.CreateKey(context.Background(), user.ID, 0, "Test Key")
+	if err != nil {
+		t.Fatalf("create key failed: %v", err)
+	}
+
+	var gotUserID int64
+	middleware := RequireAuthOrAPIKey(store, authSvc, apiKeySvc)
+	handler := middleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		u := UserFromContext(r.Context())
+		if u != nil {
+			gotUserID = u.ID
+		}
+		w.WriteHeader(http.StatusOK)
+	}))
+
+	// Use API key without session — triggers the fallback path.
+	req := httptest.NewRequest(http.MethodGet, "/test", nil)
+	req.Header.Set("Authorization", "Bearer "+rawKey)
+	w := httptest.NewRecorder()
+	handler.ServeHTTP(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Errorf("expected 200, got %d: %s", w.Code, w.Body.String())
+	}
+	if gotUserID != user.ID {
+		t.Errorf("expected user ID %d, got %d", user.ID, gotUserID)
+	}
+}
+
+func TestRequireAuthOrAPIKey_InvalidAPIKey(t *testing.T) {
+	repo := newMockUserRepo()
+	authSvc := NewService(repo)
+	store := NewSessionStore("test-secret-key-32-bytes-long!!!")
+	apiKeyRepo := newMockAPIKeyRepoForAuth()
+	apiKeySvc := newAPIKeyServiceForAuth(apiKeyRepo)
+
+	middleware := RequireAuthOrAPIKey(store, authSvc, apiKeySvc)
+	handler := middleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		t.Error("handler should not be called with invalid API key")
+	}))
+
+	req := httptest.NewRequest(http.MethodGet, "/test", nil)
+	req.Header.Set("Authorization", "Bearer tvn_invalid_key")
+	w := httptest.NewRecorder()
+	handler.ServeHTTP(w, req)
+
+	if w.Code != http.StatusUnauthorized {
+		t.Errorf("expected 401, got %d", w.Code)
+	}
+}
+
