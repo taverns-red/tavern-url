@@ -31,6 +31,9 @@ templ LinkDetailPage(link *model.Link, summary *model.ClickSummary, baseURL stri
 					<a href={ templ.URL(fmt.Sprintf("/api/v1/links/%d/qr?size=512", link.ID)) } class="btn btn-secondary" download>
 						Download QR
 					</a>
+					<a href={ templ.URL(fmt.Sprintf("/api/v1/links/%d/analytics/export", link.ID)) } class="btn btn-secondary" download>
+						Export CSV
+					</a>
 					<button class="btn btn-ghost" data-copy={ fmt.Sprintf("%s/%s", baseURL, link.Slug) }>
 						Copy Link
 					</button>

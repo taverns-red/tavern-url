@@ -3,9 +3,11 @@ package handler
 import (
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/taverns-red/tavern-url/internal/auth"
+	"github.com/taverns-red/tavern-url/internal/model"
 	"github.com/taverns-red/tavern-url/internal/service"
 	"github.com/taverns-red/tavern-url/templates"
 )
@@ -16,12 +18,13 @@ type PageHandler struct {
 	authSvc      *auth.Service
 	linkSvc      *service.LinkService
 	analyticsSvc *service.AnalyticsService
+	apiKeySvc    *service.APIKeyService
 	baseURL      string
 }
 
 // NewPageHandler creates a new PageHandler.
-func NewPageHandler(sessionStore auth.SessionStore, authSvc *auth.Service, linkSvc *service.LinkService, analyticsSvc *service.AnalyticsService, baseURL string) *PageHandler {
-	return &PageHandler{sessionStore: sessionStore, authSvc: authSvc, linkSvc: linkSvc, analyticsSvc: analyticsSvc, baseURL: baseURL}
+func NewPageHandler(sessionStore auth.SessionStore, authSvc *auth.Service, linkSvc *service.LinkService, analyticsSvc *service.AnalyticsService, apiKeySvc *service.APIKeyService, baseURL string) *PageHandler {
+	return &PageHandler{sessionStore: sessionStore, authSvc: authSvc, linkSvc: linkSvc, analyticsSvc: analyticsSvc, apiKeySvc: apiKeySvc, baseURL: baseURL}
 }
 
 func (h *PageHandler) isAuthenticated(r *http.Request) bool {
@@ -69,7 +72,26 @@ func (h *PageHandler) Dashboard(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	templates.DashboardPage(links, h.baseURL).Render(r.Context(), w)
+	// Filter by search query if provided.
+	query := r.URL.Query().Get("q")
+	if query != "" {
+		var filtered []model.Link
+		q := strings.ToLower(query)
+		for _, l := range links {
+			if strings.Contains(strings.ToLower(l.Slug), q) || strings.Contains(strings.ToLower(l.OriginalURL), q) {
+				filtered = append(filtered, l)
+			}
+		}
+		links = filtered
+	}
+
+	// HTMX request — return just the link list partial.
+	if r.Header.Get("HX-Request") == "true" {
+		templates.LinkList(links, h.baseURL).Render(r.Context(), w)
+		return
+	}
+
+	templates.DashboardPage(links, h.baseURL, query).Render(r.Context(), w)
 }
 
 // LinkDetail renders the link detail page with analytics.
@@ -102,3 +124,19 @@ func (h *PageHandler) LinkDetail(w http.ResponseWriter, r *http.Request) {
 	templates.LinkDetailPage(link, summary, h.baseURL, days).Render(r.Context(), w)
 }
 
+// APIKeys renders the API key management page.
+func (h *PageHandler) APIKeys(w http.ResponseWriter, r *http.Request) {
+	userID, err := h.sessionStore.GetUserID(r)
+	if err != nil || userID == 0 {
+		http.Redirect(w, r, "/login", http.StatusFound)
+		return
+	}
+
+	keys, err := h.apiKeySvc.ListKeys(r.Context(), userID)
+	if err != nil {
+		http.Error(w, "failed to list keys", http.StatusInternalServerError)
+		return
+	}
+
+	templates.APIKeysPage(keys).Render(r.Context(), w)
+}

@@ -1,0 +1,79 @@
+package templates
+
+import (
+	"fmt"
+	"github.com/taverns-red/tavern-url/internal/model"
+)
+
+// APIKeysPage renders the API key management page.
+templ APIKeysPage(keys []model.APIKey) {
+	@Layout("API Keys", true) {
+		<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:var(--space-6)">
+			<div>
+				<h1 style="font-size:var(--font-size-2xl);font-weight:var(--font-weight-bold)">API Keys</h1>
+				<p style="color:var(--color-text-secondary);font-size:var(--font-size-sm);margin-top:var(--space-1)">Manage keys for programmatic access</p>
+			</div>
+			<button class="btn btn-primary" data-modal-open="create-key-modal">
+				+ New Key
+			</button>
+		</div>
+
+		<!-- Create Key Modal -->
+		<div id="create-key-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:200;align-items:center;justify-content:center;padding:var(--space-4)">
+			<div class="card" style="max-width:500px;width:100%;padding:var(--space-8)">
+				<h2 style="font-size:var(--font-size-xl);font-weight:var(--font-weight-semibold);margin-bottom:var(--space-4)">Create API Key</h2>
+				<form class="auth-form" hx-post="/api/v1/keys" hx-target="#key-list" hx-swap="outerHTML">
+					<div class="form-group">
+						<label class="form-label" for="key-name">Key name</label>
+						<input class="form-input" type="text" id="key-name" name="name" placeholder="CI Pipeline" required/>
+						<span class="form-hint">A label to help you remember what this key is for</span>
+					</div>
+					<div id="create-key-error"></div>
+					<div style="display:flex;gap:var(--space-3);justify-content:flex-end">
+						<button type="button" class="btn btn-secondary" data-modal-close="create-key-modal">Cancel</button>
+						<button type="submit" class="btn btn-primary">
+							<span class="htmx-hide-on-request">Create Key</span>
+							<span class="htmx-indicator spinner"></span>
+						</button>
+					</div>
+				</form>
+			</div>
+		</div>
+
+		<!-- Key List -->
+		<div id="key-list">
+			@APIKeyList(keys)
+		</div>
+	}
+}
+
+// APIKeyList renders the API key list (for HTMX partial swaps).
+templ APIKeyList(keys []model.APIKey) {
+	<div id="key-list">
+		if len(keys) == 0 {
+			<div class="card" style="text-align:center;padding:var(--space-12)">
+				<p style="font-size:var(--font-size-lg);color:var(--color-text-secondary);margin-bottom:var(--space-4)">No API keys yet</p>
+				<p style="color:var(--color-text-muted)">Create a key to access the API programmatically.</p>
+			</div>
+		} else {
+			<div style="display:flex;flex-direction:column;gap:var(--space-3)">
+				for _, key := range keys {
+					<div class="card" style="display:flex;align-items:center;gap:var(--space-4);padding:var(--space-4) var(--space-6)">
+						<div style="flex:1;min-width:0">
+							<div style="font-weight:var(--font-weight-semibold);margin-bottom:var(--space-1)">{ key.Name }</div>
+							<div style="color:var(--color-text-muted);font-size:var(--font-size-sm);font-family:monospace">
+								{ key.KeyPrefix }••••••••
+							</div>
+						</div>
+						<div style="display:flex;align-items:center;gap:var(--space-2)">
+							<span class="text-sm text-muted">{ key.CreatedAt.Format("Jan 2, 2006") }</span>
+							<button class="btn btn-ghost btn-danger" style="padding:var(--space-1) var(--space-2);min-height:auto;font-size:var(--font-size-xs)" hx-delete={ fmt.Sprintf("/api/v1/keys/%d", key.ID) } hx-target="#key-list" hx-swap="outerHTML" hx-confirm="Delete this API key? This cannot be undone.">
+								Delete
+							</button>
+						</div>
+					</div>
+				}
+			</div>
+		}
+	</div>
+}

@@ -48,12 +48,12 @@ func Layout(title string, isAuthenticated bool) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		if isAuthenticated {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "<a href=\"/dashboard\">Dashboard</a> <a href=\"#\" hx-post=\"/api/v1/auth/logout\" hx-swap=\"none\">Logout</a>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "<a href=\"/dashboard\">Dashboard</a> <a href=\"/settings/keys\">API Keys</a> <button class=\"btn btn-ghost\" id=\"theme-toggle\" style=\"padding:var(--space-1) var(--space-2);min-height:auto;font-size:var(--font-size-lg);line-height:1\" title=\"Toggle dark mode\">🌙</button> <a href=\"#\" hx-post=\"/api/v1/auth/logout\" hx-swap=\"none\">Logout</a>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 		} else {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "<a href=\"/login\">Log in</a> <a href=\"/register\" class=\"btn btn-primary\">Sign up</a>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "<button class=\"btn btn-ghost\" id=\"theme-toggle\" style=\"padding:var(--space-1) var(--space-2);min-height:auto;font-size:var(--font-size-lg);line-height:1\" title=\"Toggle dark mode\">🌙</button> <a href=\"/login\">Log in</a> <a href=\"/register\" class=\"btn btn-primary\">Sign up</a>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
