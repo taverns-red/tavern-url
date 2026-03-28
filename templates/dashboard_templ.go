@@ -60,7 +60,7 @@ func DashboardPage(links []model.Link, baseURL string, query string) templ.Compo
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "\" hx-get=\"/dashboard\" hx-target=\"#link-list\" hx-swap=\"outerHTML\" hx-trigger=\"input changed delay:300ms, search\" hx-push-url=\"true\" hx-include=\"this\" style=\"max-width:100%\"></div><!-- Create Link Modal --> <div id=\"create-modal\" style=\"display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:200;align-items:center;justify-content:center;padding:var(--space-4)\"><div class=\"card\" style=\"max-width:500px;width:100%;padding:var(--space-8)\"><h2 style=\"font-size:var(--font-size-xl);font-weight:var(--font-weight-semibold);margin-bottom:var(--space-4)\">Create Short Link</h2><form class=\"auth-form\" hx-post=\"/api/v1/links\" hx-target=\"#link-list\" hx-swap=\"outerHTML\"><div class=\"form-group\"><label class=\"form-label\" for=\"url\">Destination URL</label> <input class=\"form-input\" type=\"url\" id=\"url\" name=\"url\" placeholder=\"https://www.habitat.org/donate\" required></div><div class=\"form-group\"><label class=\"form-label\" for=\"slug\">Custom slug <span class=\"text-muted\">(optional)</span></label> <input class=\"form-input\" type=\"text\" id=\"slug\" name=\"slug\" placeholder=\"spring-gala\" minlength=\"3\" maxlength=\"64\"> <span class=\"form-hint\">3–64 chars, letters, numbers, and hyphens</span></div><div class=\"form-group\"><label class=\"form-label\" for=\"expires_at\">Expiration date <span class=\"text-muted\">(optional)</span></label> <input class=\"form-input\" type=\"datetime-local\" id=\"expires_at\" name=\"expires_at\"> <span class=\"form-hint\">Link will return 410 Gone after this date</span></div><div class=\"form-group\"><label class=\"form-label\" for=\"max_clicks\">Max clicks <span class=\"text-muted\">(optional)</span></label> <input class=\"form-input\" type=\"number\" id=\"max_clicks\" name=\"max_clicks\" min=\"1\" placeholder=\"e.g. 1000\"> <span class=\"form-hint\">Link will stop redirecting after this many clicks</span></div><div class=\"form-group\"><label class=\"form-label\" for=\"password\">Password <span class=\"text-muted\">(optional)</span></label> <input class=\"form-input\" type=\"password\" id=\"password\" name=\"password\" placeholder=\"Require password to access\"> <span class=\"form-hint\">Visitors will be prompted for this password before redirect</span></div><div id=\"create-error\"></div><div style=\"display:flex;gap:var(--space-3);justify-content:flex-end\"><button type=\"button\" class=\"btn btn-secondary\" data-modal-close=\"create-modal\">Cancel</button> <button type=\"submit\" class=\"btn btn-primary\"><span class=\"htmx-hide-on-request\">Create</span> <span class=\"htmx-indicator spinner\"></span></button></div></form></div></div><!-- Edit Link Modal --> <div id=\"edit-modal\" style=\"display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:200;align-items:center;justify-content:center;padding:var(--space-4)\"><div class=\"card\" style=\"max-width:500px;width:100%;padding:var(--space-8)\"><h2 style=\"font-size:var(--font-size-xl);font-weight:var(--font-weight-semibold);margin-bottom:var(--space-4)\">Edit Link</h2><form class=\"auth-form\" id=\"edit-form\" hx-swap=\"outerHTML\" hx-target=\"#link-list\"><div class=\"form-group\"><label class=\"form-label\" for=\"edit-url\">Destination URL</label> <input class=\"form-input\" type=\"url\" id=\"edit-url\" name=\"url\" required></div><div class=\"form-group\"><label class=\"form-label\" for=\"edit-slug\">Slug</label> <input class=\"form-input\" type=\"text\" id=\"edit-slug\" name=\"slug\" minlength=\"3\" maxlength=\"64\"></div><div id=\"edit-error\"></div><div style=\"display:flex;gap:var(--space-3);justify-content:flex-end\"><button type=\"button\" class=\"btn btn-secondary\" data-modal-close=\"edit-modal\">Cancel</button> <button type=\"submit\" class=\"btn btn-primary\"><span class=\"htmx-hide-on-request\">Save</span> <span class=\"htmx-indicator spinner\"></span></button></div></form></div></div><!-- Link List --> <div id=\"link-list\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "\" hx-get=\"/dashboard\" hx-target=\"#link-list\" hx-swap=\"outerHTML\" hx-trigger=\"input changed delay:300ms, search\" hx-push-url=\"true\" hx-include=\"this\" style=\"max-width:100%\"></div><!-- Create Link Modal --> <div id=\"create-modal\" style=\"display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:200;align-items:center;justify-content:center;padding:var(--space-4)\"><div class=\"card\" style=\"max-width:500px;width:100%;padding:var(--space-8)\"><h2 style=\"font-size:var(--font-size-xl);font-weight:var(--font-weight-semibold);margin-bottom:var(--space-4)\">Create Short Link</h2><form class=\"auth-form\" hx-post=\"/api/v1/links\" hx-target=\"#link-list\" hx-swap=\"outerHTML\"><div class=\"form-group\"><label class=\"form-label\" for=\"url\">Destination URL</label> <input class=\"form-input\" type=\"url\" id=\"url\" name=\"url\" placeholder=\"https://www.habitat.org/donate\" required></div><div class=\"form-group\"><label class=\"form-label\" for=\"slug\">Custom slug <span class=\"text-muted\">(optional)</span></label> <input class=\"form-input\" type=\"text\" id=\"slug\" name=\"slug\" placeholder=\"spring-gala\" minlength=\"3\" maxlength=\"64\"> <span class=\"form-hint\">3–64 chars, letters, numbers, and hyphens</span></div><div class=\"form-group\"><label class=\"form-label\" for=\"expires_at\">Expiration date <span class=\"text-muted\">(optional)</span></label> <input class=\"form-input\" type=\"datetime-local\" id=\"expires_at\" name=\"expires_at\"> <span class=\"form-hint\">Link will return 410 Gone after this date</span></div><div class=\"form-group\"><label class=\"form-label\" for=\"max_clicks\">Max clicks <span class=\"text-muted\">(optional)</span></label> <input class=\"form-input\" type=\"number\" id=\"max_clicks\" name=\"max_clicks\" min=\"1\" placeholder=\"e.g. 1000\"> <span class=\"form-hint\">Link will stop redirecting after this many clicks</span></div><div class=\"form-group\"><label class=\"form-label\" for=\"password\">Password <span class=\"text-muted\">(optional)</span></label> <input class=\"form-input\" type=\"password\" id=\"password\" name=\"password\" placeholder=\"Require password to access\"> <span class=\"form-hint\">Visitors will be prompted for this password before redirect</span></div><!-- UTM Builder (collapsible) --><details style=\"margin-bottom:var(--space-4)\"><summary style=\"cursor:pointer;font-weight:var(--font-weight-semibold);font-size:var(--font-size-sm);color:var(--color-text-secondary);user-select:none\">🏷️ UTM Campaign Tags</summary><div style=\"margin-top:var(--space-3);display:flex;flex-direction:column;gap:var(--space-3)\"><div class=\"form-group\" style=\"margin-bottom:0\"><label class=\"form-label\" for=\"utm_source\">Source</label> <input class=\"form-input utm-field\" type=\"text\" id=\"utm_source\" placeholder=\"e.g. newsletter, twitter, google\"></div><div class=\"form-group\" style=\"margin-bottom:0\"><label class=\"form-label\" for=\"utm_medium\">Medium</label> <input class=\"form-input utm-field\" type=\"text\" id=\"utm_medium\" placeholder=\"e.g. email, social, cpc\"></div><div class=\"form-group\" style=\"margin-bottom:0\"><label class=\"form-label\" for=\"utm_campaign\">Campaign</label> <input class=\"form-input utm-field\" type=\"text\" id=\"utm_campaign\" placeholder=\"e.g. spring-2026-gala\"></div><div class=\"form-group\" style=\"margin-bottom:0\"><label class=\"form-label\" for=\"utm_term\">Term <span class=\"text-muted\">(optional)</span></label> <input class=\"form-input utm-field\" type=\"text\" id=\"utm_term\" placeholder=\"e.g. donate+now\"></div><div class=\"form-group\" style=\"margin-bottom:0\"><label class=\"form-label\" for=\"utm_content\">Content <span class=\"text-muted\">(optional)</span></label> <input class=\"form-input utm-field\" type=\"text\" id=\"utm_content\" placeholder=\"e.g. banner-ad-1\"></div><span class=\"form-hint\">UTM params will be appended to the destination URL automatically</span></div></details><div id=\"create-error\"></div><div style=\"display:flex;gap:var(--space-3);justify-content:flex-end\"><button type=\"button\" class=\"btn btn-secondary\" data-modal-close=\"create-modal\">Cancel</button> <button type=\"submit\" class=\"btn btn-primary\"><span class=\"htmx-hide-on-request\">Create</span> <span class=\"htmx-indicator spinner\"></span></button></div></form></div></div><!-- Edit Link Modal --> <div id=\"edit-modal\" style=\"display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:200;align-items:center;justify-content:center;padding:var(--space-4)\"><div class=\"card\" style=\"max-width:500px;width:100%;padding:var(--space-8)\"><h2 style=\"font-size:var(--font-size-xl);font-weight:var(--font-weight-semibold);margin-bottom:var(--space-4)\">Edit Link</h2><form class=\"auth-form\" id=\"edit-form\" hx-swap=\"outerHTML\" hx-target=\"#link-list\"><div class=\"form-group\"><label class=\"form-label\" for=\"edit-url\">Destination URL</label> <input class=\"form-input\" type=\"url\" id=\"edit-url\" name=\"url\" required></div><div class=\"form-group\"><label class=\"form-label\" for=\"edit-slug\">Slug</label> <input class=\"form-input\" type=\"text\" id=\"edit-slug\" name=\"slug\" minlength=\"3\" maxlength=\"64\"></div><div id=\"edit-error\"></div><div style=\"display:flex;gap:var(--space-3);justify-content:flex-end\"><button type=\"button\" class=\"btn btn-secondary\" data-modal-close=\"edit-modal\">Cancel</button> <button type=\"submit\" class=\"btn btn-primary\"><span class=\"htmx-hide-on-request\">Save</span> <span class=\"htmx-indicator spinner\"></span></button></div></form></div></div><!-- Link List --> <div id=\"link-list\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -126,7 +126,7 @@ func LinkList(links []model.Link, baseURL string) templ.Component {
 				var templ_7745c5c3_Var5 templ.SafeURL
 				templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinURLErrs(templ.URL(fmt.Sprintf("/links/%s", link.Slug)))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/dashboard.templ`, Line: 123, Col: 64}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/dashboard.templ`, Line: 150, Col: 64}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
 				if templ_7745c5c3_Err != nil {
@@ -139,7 +139,7 @@ func LinkList(links []model.Link, baseURL string) templ.Component {
 				var templ_7745c5c3_Var6 string
 				templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%s/%s", baseURL, link.Slug))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/dashboard.templ`, Line: 124, Col: 51}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/dashboard.templ`, Line: 151, Col: 51}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
 				if templ_7745c5c3_Err != nil {
@@ -152,7 +152,7 @@ func LinkList(links []model.Link, baseURL string) templ.Component {
 				var templ_7745c5c3_Var7 string
 				templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%s/%s", baseURL, link.Slug))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/dashboard.templ`, Line: 126, Col: 167}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/dashboard.templ`, Line: 153, Col: 167}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
 				if templ_7745c5c3_Err != nil {
@@ -186,7 +186,7 @@ func LinkList(links []model.Link, baseURL string) templ.Component {
 				var templ_7745c5c3_Var8 string
 				templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinStringErrs(link.OriginalURL)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/dashboard.templ`, Line: 140, Col: 31}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/dashboard.templ`, Line: 167, Col: 31}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var8))
 				if templ_7745c5c3_Err != nil {
@@ -204,7 +204,7 @@ func LinkList(links []model.Link, baseURL string) templ.Component {
 					var templ_7745c5c3_Var9 string
 					templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(link.ExpiresAt.Format("Jan 2, 2006"))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/dashboard.templ`, Line: 143, Col: 144}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/dashboard.templ`, Line: 170, Col: 144}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
 					if templ_7745c5c3_Err != nil {
@@ -223,7 +223,7 @@ func LinkList(links []model.Link, baseURL string) templ.Component {
 					var templ_7745c5c3_Var10 string
 					templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d/%d clicks", link.ClickCount, *link.MaxClicks))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/dashboard.templ`, Line: 146, Col: 170}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/dashboard.templ`, Line: 173, Col: 170}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var10))
 					if templ_7745c5c3_Err != nil {
@@ -241,7 +241,7 @@ func LinkList(links []model.Link, baseURL string) templ.Component {
 				var templ_7745c5c3_Var11 string
 				templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinStringErrs(link.CreatedAt.Format("Jan 2, 2006"))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/dashboard.templ`, Line: 151, Col: 78}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/dashboard.templ`, Line: 178, Col: 78}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var11))
 				if templ_7745c5c3_Err != nil {
@@ -254,7 +254,7 @@ func LinkList(links []model.Link, baseURL string) templ.Component {
 				var templ_7745c5c3_Var12 string
 				templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d", link.ID))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/dashboard.templ`, Line: 156, Col: 49}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/dashboard.templ`, Line: 183, Col: 49}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var12))
 				if templ_7745c5c3_Err != nil {
@@ -267,7 +267,7 @@ func LinkList(links []model.Link, baseURL string) templ.Component {
 				var templ_7745c5c3_Var13 string
 				templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.JoinStringErrs(link.OriginalURL)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/dashboard.templ`, Line: 157, Col: 40}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/dashboard.templ`, Line: 184, Col: 40}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var13))
 				if templ_7745c5c3_Err != nil {
@@ -280,7 +280,7 @@ func LinkList(links []model.Link, baseURL string) templ.Component {
 				var templ_7745c5c3_Var14 string
 				templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.JoinStringErrs(link.Slug)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/dashboard.templ`, Line: 158, Col: 34}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/dashboard.templ`, Line: 185, Col: 34}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var14))
 				if templ_7745c5c3_Err != nil {
@@ -293,7 +293,7 @@ func LinkList(links []model.Link, baseURL string) templ.Component {
 				var templ_7745c5c3_Var15 string
 				templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("/api/v1/links/%d", link.ID))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/dashboard.templ`, Line: 162, Col: 192}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/dashboard.templ`, Line: 189, Col: 192}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var15))
 				if templ_7745c5c3_Err != nil {

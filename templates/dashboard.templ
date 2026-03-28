@@ -62,6 +62,33 @@ templ DashboardPage(links []model.Link, baseURL string, query string) {
 						<input class="form-input" type="password" id="password" name="password" placeholder="Require password to access"/>
 						<span class="form-hint">Visitors will be prompted for this password before redirect</span>
 					</div>
+					<!-- UTM Builder (collapsible) -->
+					<details style="margin-bottom:var(--space-4)">
+						<summary style="cursor:pointer;font-weight:var(--font-weight-semibold);font-size:var(--font-size-sm);color:var(--color-text-secondary);user-select:none">🏷️ UTM Campaign Tags</summary>
+						<div style="margin-top:var(--space-3);display:flex;flex-direction:column;gap:var(--space-3)">
+							<div class="form-group" style="margin-bottom:0">
+								<label class="form-label" for="utm_source">Source</label>
+								<input class="form-input utm-field" type="text" id="utm_source" placeholder="e.g. newsletter, twitter, google"/>
+							</div>
+							<div class="form-group" style="margin-bottom:0">
+								<label class="form-label" for="utm_medium">Medium</label>
+								<input class="form-input utm-field" type="text" id="utm_medium" placeholder="e.g. email, social, cpc"/>
+							</div>
+							<div class="form-group" style="margin-bottom:0">
+								<label class="form-label" for="utm_campaign">Campaign</label>
+								<input class="form-input utm-field" type="text" id="utm_campaign" placeholder="e.g. spring-2026-gala"/>
+							</div>
+							<div class="form-group" style="margin-bottom:0">
+								<label class="form-label" for="utm_term">Term <span class="text-muted">(optional)</span></label>
+								<input class="form-input utm-field" type="text" id="utm_term" placeholder="e.g. donate+now"/>
+							</div>
+							<div class="form-group" style="margin-bottom:0">
+								<label class="form-label" for="utm_content">Content <span class="text-muted">(optional)</span></label>
+								<input class="form-input utm-field" type="text" id="utm_content" placeholder="e.g. banner-ad-1"/>
+							</div>
+							<span class="form-hint">UTM params will be appended to the destination URL automatically</span>
+						</div>
+					</details>
 					<div id="create-error"></div>
 					<div style="display:flex;gap:var(--space-3);justify-content:flex-end">
 						<button type="button" class="btn btn-secondary" data-modal-close="create-modal">Cancel</button>

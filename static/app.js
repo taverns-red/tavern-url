@@ -88,6 +88,26 @@ document.addEventListener('DOMContentLoaded', function () {
     }
   });
 
+  // ── UTM Builder — auto-append UTM params to destination URL ──
+  document.addEventListener('htmx:configRequest', function (e) {
+    var form = e.detail.elt;
+    if (!form || form.id !== '' || !form.closest('#create-modal')) return;
+    var urlInput = form.querySelector('#url');
+    if (!urlInput) return;
+    var params = {};
+    ['utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content'].forEach(function (id) {
+      var input = form.querySelector('#' + id);
+      if (input && input.value.trim()) params[id] = input.value.trim();
+    });
+    if (Object.keys(params).length > 0) {
+      try {
+        var url = new URL(urlInput.value);
+        Object.keys(params).forEach(function (k) { url.searchParams.set(k, params[k]); });
+        urlInput.value = url.toString();
+      } catch (err) { /* invalid URL, just skip UTM append */ }
+    }
+  });
+
   // ── Dark mode toggle ──
   var themeToggle = document.getElementById('theme-toggle');
   var html = document.documentElement;

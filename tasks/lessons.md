@@ -65,3 +65,11 @@
 - Edit modals need `htmx.process(form)` after dynamically setting `hx-put` via JS.
 - Templ components for HTMX partials (LinkList, APIKeyList) eliminate inline HTML in handlers.
 - When handler returns HTML for HTMX, don't set Content-Type — templ sets it automatically.
+
+## Sprint 34-37 (Phase 1: Hardening)
+
+- **Service signature sprawl**: Adding optional params to `CreateLink` (expiresAt, maxClicks, password) required updating all callers including tests. Consider an options struct pattern (`CreateLinkOpts`) for services with >4 params to avoid cascading changes.
+- **Templ generate timing**: The LSP shows `undefined: templates.X` errors until `templ generate` runs. This is expected — always run `templ generate` before `go vet`/`go test`.
+- **Form vs JSON dual paths**: Each handler that supports both HTMX forms and JSON needs `isForm` branching. Extract a `parseRequest` helper to reduce boilerplate.
+- **Password gate POST route**: The `/{slug}` catch-all needed both GET and POST for the password gate. Chi requires explicit `r.Post` alongside `r.Get` — `r.HandleFunc` would also work but is less explicit.
+- **Modal proliferation**: Each new feature adds a modal → backdrop click + auto-close lists grow. Consider a generic modal manager in JS rather than enumerating IDs.
