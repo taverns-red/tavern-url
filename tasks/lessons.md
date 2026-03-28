@@ -147,3 +147,10 @@
 - **APIKeyHandler needs auth context injection in tests.** Can't use middleware — must wrap handler with `auth.ContextWithUser()` in test setup.
 - **RecordClick uses goroutine — need time.Sleep in test.** The async fire-and-forget pattern requires waiting for the goroutine to complete before asserting.
 - **Middleware/ByIP function is trivially testable.** `ByIP` just returns `r.RemoteAddr`. The `Middleware` function wraps `Allow` in an HTTP handler — easy to test with httptest once you know to pass a key extractor function.
+
+## Sprint 73 (Remaining Coverage Gaps)
+
+- **Mock SMTP server for email tests.** A tiny goroutine with bare SMTP handshake (EHLO/AUTH/MAIL/RCPT/DATA/QUIT) is enough to get 100% email coverage.
+- **Auth handler full-path tests need real auth.Service.** Can't test Register/Login service-interaction code paths with nil service. Need mock UserRepo that properly stores/retrieves users.
+- **GoogleProvider.LoginURL is trivially testable.** Just verify the returned URL contains the client ID and state parameter.
+- **HandleCallback requires mock OAuth token exchange** — deferred to a future sprint as it needs httptest.NewServer + endpoint override.
