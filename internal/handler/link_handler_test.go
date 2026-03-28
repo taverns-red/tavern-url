@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -89,6 +90,10 @@ func setupHandler() (*LinkHandler, *chi.Mux) {
 
 	r := chi.NewRouter()
 	r.Post("/api/v1/links", h.Create)
+	r.Post("/api/v1/links/bulk", h.BulkCreate)
+	r.Get("/api/v1/links", h.List)
+	r.Put("/api/v1/links/{id}", h.Update)
+	r.Delete("/api/v1/links/{id}", h.Delete)
 	r.Get("/{slug}", h.Redirect)
 	r.Get("/health", Health)
 
@@ -381,4 +386,197 @@ func setupPasswordHandler() (*LinkHandler, *chi.Mux) {
 
 	return h, r
 }
+
+func TestList_EmptyLinks(t *testing.T) {
+	_, r := setupHandler()
+
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/links", nil)
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Errorf("expected 200, got %d", w.Code)
+	}
+
+	var links []createLinkResponse
+	if err := json.NewDecoder(w.Body).Decode(&links); err != nil {
+		t.Fatalf("failed to decode: %v", err)
+	}
+	if len(links) != 0 {
+		t.Errorf("expected 0 links, got %d", len(links))
+	}
+}
+
+func TestList_WithLinks(t *testing.T) {
+	_, r := setupHandler()
+
+	// Create two links.
+	for _, url := range []string{"https://a.com", "https://b.com"} {
+		body := fmt.Sprintf(`{"url": "%s"}`, url)
+		req := httptest.NewRequest(http.MethodPost, "/api/v1/links", bytes.NewBufferString(body))
+		req.Header.Set("Content-Type", "application/json")
+		w := httptest.NewRecorder()
+		r.ServeHTTP(w, req)
+	}
+
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/links", nil)
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+
+	var links []createLinkResponse
+	json.NewDecoder(w.Body).Decode(&links)
+	if len(links) != 2 {
+		t.Errorf("expected 2 links, got %d", len(links))
+	}
+}
+
+func TestList_SearchFilter(t *testing.T) {
+	_, r := setupHandler()
+
+	// Create links.
+	for _, pair := range []struct{ url, slug string }{
+		{"https://alpha.com", "alpha"},
+		{"https://beta.com", "beta"},
+	} {
+		body := fmt.Sprintf(`{"url": "%s", "slug": "%s"}`, pair.url, pair.slug)
+		req := httptest.NewRequest(http.MethodPost, "/api/v1/links", bytes.NewBufferString(body))
+		req.Header.Set("Content-Type", "application/json")
+		w := httptest.NewRecorder()
+		r.ServeHTTP(w, req)
+	}
+
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/links?q=alpha", nil)
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+
+	var links []createLinkResponse
+	json.NewDecoder(w.Body).Decode(&links)
+	if len(links) != 1 {
+		t.Errorf("expected 1 filtered link, got %d", len(links))
+	}
+}
+
+func TestDelete_Success(t *testing.T) {
+	_, r := setupHandler()
+
+	// Create a link.
+	body := `{"url": "https://delete-me.com", "slug": "del-test"}`
+	req := httptest.NewRequest(http.MethodPost, "/api/v1/links", bytes.NewBufferString(body))
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+
+	var created createLinkResponse
+	json.NewDecoder(w.Body).Decode(&created)
+
+	// Delete it.
+	req = httptest.NewRequest(http.MethodDelete, fmt.Sprintf("/api/v1/links/%d", created.ID), nil)
+	w = httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Errorf("expected 200, got %d: %s", w.Code, w.Body.String())
+	}
+}
+
+func TestDelete_NotFound(t *testing.T) {
+	_, r := setupHandler()
+
+	req := httptest.NewRequest(http.MethodDelete, "/api/v1/links/999", nil)
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+
+	if w.Code != http.StatusNotFound {
+		t.Errorf("expected 404, got %d", w.Code)
+	}
+}
+
+func TestUpdate_Success(t *testing.T) {
+	_, r := setupHandler()
+
+	// Create a link.
+	body := `{"url": "https://original.com", "slug": "upd-test"}`
+	req := httptest.NewRequest(http.MethodPost, "/api/v1/links", bytes.NewBufferString(body))
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+
+	var created createLinkResponse
+	json.NewDecoder(w.Body).Decode(&created)
+
+	// Update URL.
+	updateBody := `{"url": "https://updated.com"}`
+	req = httptest.NewRequest(http.MethodPut, fmt.Sprintf("/api/v1/links/%d", created.ID), bytes.NewBufferString(updateBody))
+	req.Header.Set("Content-Type", "application/json")
+	w = httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Errorf("expected 200, got %d: %s", w.Code, w.Body.String())
+	}
+}
+
+func TestUpdate_NotFound(t *testing.T) {
+	_, r := setupHandler()
+
+	body := `{"url": "https://updated.com"}`
+	req := httptest.NewRequest(http.MethodPut, "/api/v1/links/999", bytes.NewBufferString(body))
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+
+	if w.Code != http.StatusNotFound && w.Code != http.StatusBadRequest {
+		t.Errorf("expected 404 or 400 for missing link, got %d", w.Code)
+	}
+}
+
+func TestBulkCreate_Success(t *testing.T) {
+	_, r := setupHandler()
+
+	body := `{"urls": ["https://bulk1.com", "https://bulk2.com", "https://bulk3.com"]}`
+	req := httptest.NewRequest(http.MethodPost, "/api/v1/links/bulk", bytes.NewBufferString(body))
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+
+	if w.Code != http.StatusCreated {
+		t.Errorf("expected 201, got %d: %s", w.Code, w.Body.String())
+	}
+
+	var links []createLinkResponse
+	json.NewDecoder(w.Body).Decode(&links)
+	if len(links) != 3 {
+		t.Errorf("expected 3 links, got %d", len(links))
+	}
+}
+
+func TestBulkCreate_TooMany(t *testing.T) {
+	_, r := setupHandler()
+
+	body := `{"urls": []}`
+	req := httptest.NewRequest(http.MethodPost, "/api/v1/links/bulk", bytes.NewBufferString(body))
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+
+	if w.Code != http.StatusBadRequest {
+		t.Errorf("expected 400 for empty URLs, got %d", w.Code)
+	}
+}
+
+func TestCreate_FormEncoded(t *testing.T) {
+	_, r := setupHandler()
+
+	form := "url=https%3A%2F%2Fform-test.com&slug=form-link"
+	req := httptest.NewRequest(http.MethodPost, "/api/v1/links", bytes.NewBufferString(form))
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+
+	// Form-encoded creates return HTML partials (200) not JSON (201).
+	if w.Code != http.StatusOK {
+		t.Errorf("expected 200 (HTML partial), got %d: %s", w.Code, w.Body.String())
+	}
+}
+
 
