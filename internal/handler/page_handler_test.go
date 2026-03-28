@@ -16,7 +16,7 @@ import (
 )
 
 func setupPageHandler() (*PageHandler, *chi.Mux) {
-	sessionStore := auth.NewSessionStore("test-secret-key-32-bytes-long!!")
+	sessionStore := auth.NewSessionStore("test-secret-key-32-bytes-long!!", false)
 	repo := newMockRepo()
 	linkSvc := service.NewLinkService(repo)
 
@@ -416,7 +416,7 @@ func TestGoogleLoginHandler_Login(t *testing.T) {
 	}
 	repo := newMockUserRepoForAuthHandler()
 	provider := auth.NewGoogleProvider(cfg, repo)
-	store := auth.NewSessionStore("test-secret-key-32-bytes-long!!!")
+	store := auth.NewSessionStore("test-secret-key-32-bytes-long!!!", false)
 	h := NewGoogleLoginHandler(provider, store)
 
 	r := chi.NewRouter()
@@ -436,7 +436,7 @@ func TestGoogleLoginHandler_Login(t *testing.T) {
 }
 
 func setupFullPageHandler() (*PageHandler, *chi.Mux) {
-	sessionStore := auth.NewSessionStore("test-secret-key-32-bytes-long!!")
+	sessionStore := auth.NewSessionStore("test-secret-key-32-bytes-long!!", false)
 	repo := newMockRepo()
 	linkSvc := service.NewLinkService(repo)
 	orgRepo := newMockOrgRepo()
@@ -480,7 +480,7 @@ func TestOrgs_Authenticated(t *testing.T) {
 }
 
 func TestAuthHandler_Logout_ClearError(t *testing.T) {
-	store := auth.NewSessionStore("test-secret-key-32-bytes-long!!!")
+	store := auth.NewSessionStore("test-secret-key-32-bytes-long!!!", false)
 	h := &AuthHandler{authSvc: nil, sessionStore: store}
 
 	r := chi.NewRouter()
@@ -496,5 +496,3 @@ func TestAuthHandler_Logout_ClearError(t *testing.T) {
 		t.Errorf("expected 200, got %d", w.Code)
 	}
 }
-
-

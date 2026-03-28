@@ -43,22 +43,35 @@ func Layout(title string, isAuthenticated bool) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, " — Tavern URL</title><link rel=\"stylesheet\" href=\"/static/styles.css\"><script src=\"https://unpkg.com/htmx.org@2.0.4\" integrity=\"sha384-HGfztofotfshcF7+8n44JQL2oJmowVChPTg48S+jvZoztPfvwD79OC/LTtG6dMp+\" crossorigin=\"anonymous\"></script><script src=\"/static/app.js\" defer></script></head><body><div class=\"app-layout\"><header class=\"header\"><div class=\"container\" style=\"display:flex;align-items:center;width:100%\"><a href=\"/\" class=\"header__logo\"><svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71\"></path> <path d=\"M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71\"></path></svg> Tavern URL</a><nav class=\"header__nav\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, " — Tavern URL</title><link rel=\"stylesheet\" href=\"/static/styles.css\"><meta name=\"gorilla.csrf.Token\" content=\"")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		var templ_7745c5c3_Var3 string
+		templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(getCSRFToken(ctx))
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/layout.templ`, Line: 13, Col: 62}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "\"><script src=\"https://unpkg.com/htmx.org@2.0.4\" integrity=\"sha384-HGfztofotfshcF7+8n44JQL2oJmowVChPTg48S+jvZoztPfvwD79OC/LTtG6dMp+\" crossorigin=\"anonymous\"></script><script src=\"/static/app.js\" defer></script><script>\n\t\t\t\tdocument.addEventListener('htmx:configRequest', function(evt) {\n\t\t\t\t\tlet token = document.querySelector('meta[name=\"gorilla.csrf.Token\"]').content;\n\t\t\t\t\tif (token) {\n\t\t\t\t\t\tevt.detail.headers['X-CSRF-Token'] = token;\n\t\t\t\t\t}\n\t\t\t\t});\n\t\t\t</script></head><body><div class=\"app-layout\"><header class=\"header\"><div class=\"container\" style=\"display:flex;align-items:center;width:100%\"><a href=\"/\" class=\"header__logo\"><svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71\"></path> <path d=\"M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71\"></path></svg> Tavern URL</a><nav class=\"header__nav\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		if isAuthenticated {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "<a href=\"/dashboard\">Dashboard</a> <a href=\"/settings/org\">Orgs</a> <a href=\"/settings/keys\">API Keys</a> <button class=\"btn btn-ghost\" id=\"theme-toggle\" style=\"padding:var(--space-1) var(--space-2);min-height:auto;font-size:var(--font-size-lg);line-height:1\" title=\"Toggle dark mode\">🌙</button> <a href=\"#\" hx-post=\"/api/v1/auth/logout\" hx-swap=\"none\">Logout</a>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "<a href=\"/dashboard\">Dashboard</a> <a href=\"/settings/org\">Orgs</a> <a href=\"/settings/keys\">API Keys</a> <button class=\"btn btn-ghost\" id=\"theme-toggle\" style=\"padding:var(--space-1) var(--space-2);min-height:auto;font-size:var(--font-size-lg);line-height:1\" title=\"Toggle dark mode\">🌙</button> <a href=\"#\" hx-post=\"/api/v1/auth/logout\" hx-swap=\"none\">Logout</a>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 		} else {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "<button class=\"btn btn-ghost\" id=\"theme-toggle\" style=\"padding:var(--space-1) var(--space-2);min-height:auto;font-size:var(--font-size-lg);line-height:1\" title=\"Toggle dark mode\">🌙</button> <a href=\"/login\">Log in</a> <a href=\"/register\" class=\"btn btn-primary\">Sign up</a>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "<button class=\"btn btn-ghost\" id=\"theme-toggle\" style=\"padding:var(--space-1) var(--space-2);min-height:auto;font-size:var(--font-size-lg);line-height:1\" title=\"Toggle dark mode\">🌙</button> <a href=\"/login\">Log in</a> <a href=\"/register\" class=\"btn btn-primary\">Sign up</a>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "</nav></div></header><main class=\"main\"><div class=\"container\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "</nav></div></header><main class=\"main\"><div class=\"container\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -66,7 +79,7 @@ func Layout(title string, isAuthenticated bool) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "</div></main><footer class=\"footer\"><div class=\"container\"><p>&copy; 2026 Tavern URL — Open source, privacy-first.</p></div></footer></div></body></html>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "</div></main><footer class=\"footer\"><div class=\"container\"><p>&copy; 2026 Tavern URL — Open source, privacy-first.</p></div></footer></div></body></html>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

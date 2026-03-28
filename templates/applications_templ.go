@@ -46,7 +46,20 @@ func ApplicationPage() templ.Component {
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div style=\"max-width:600px;margin:0 auto;padding:var(--space-8) 0\"><div style=\"text-align:center;margin-bottom:var(--space-8)\"><h1 style=\"font-size:var(--font-size-2xl);font-weight:var(--font-weight-bold);margin-bottom:var(--space-2)\">Apply for Tavern URL</h1><p style=\"color:var(--color-text-secondary)\">Free for verified nonprofits. Tell us about your organization.</p></div><div class=\"card\" style=\"padding:var(--space-8)\"><form class=\"auth-form\" method=\"POST\" action=\"/api/v1/applications\"><div class=\"form-group\"><label class=\"form-label\" for=\"org_name\">Organization Name</label> <input class=\"form-input\" type=\"text\" id=\"org_name\" name=\"org_name\" placeholder=\"Habitat for Humanity\" required></div><div class=\"form-group\"><label class=\"form-label\" for=\"mission\">Mission Statement</label> <textarea class=\"form-input\" id=\"mission\" name=\"mission\" rows=\"4\" placeholder=\"Tell us about your organization's mission...\" required></textarea></div><div class=\"form-group\"><label class=\"form-label\" for=\"website\">Website <span class=\"text-muted\">(optional)</span></label> <input class=\"form-input\" type=\"url\" id=\"website\" name=\"website\" placeholder=\"https://yourorg.org\"></div><div class=\"form-group\"><label class=\"form-label\" for=\"contact_name\">Contact Name</label> <input class=\"form-input\" type=\"text\" id=\"contact_name\" name=\"contact_name\" placeholder=\"Jane Smith\" required></div><div class=\"form-group\"><label class=\"form-label\" for=\"contact_email\">Contact Email</label> <input class=\"form-input\" type=\"email\" id=\"contact_email\" name=\"contact_email\" placeholder=\"jane@yourorg.org\" required></div><button type=\"submit\" class=\"btn btn-primary\" style=\"width:100%\">Submit Application</button></form></div></div>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div style=\"max-width:600px;margin:0 auto;padding:var(--space-8) 0\"><div style=\"text-align:center;margin-bottom:var(--space-8)\"><h1 style=\"font-size:var(--font-size-2xl);font-weight:var(--font-weight-bold);margin-bottom:var(--space-2)\">Apply for Tavern URL</h1><p style=\"color:var(--color-text-secondary)\">Free for verified nonprofits. Tell us about your organization.</p></div><div class=\"card\" style=\"padding:var(--space-8)\"><form class=\"auth-form\" method=\"POST\" action=\"/api/v1/applications\"><input type=\"hidden\" name=\"gorilla.csrf.Token\" value=\"")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var3 string
+			templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(getCSRFToken(ctx))
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/applications.templ`, Line: 18, Col: 77}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "\"><div class=\"form-group\"><label class=\"form-label\" for=\"org_name\">Organization Name</label> <input class=\"form-input\" type=\"text\" id=\"org_name\" name=\"org_name\" placeholder=\"Habitat for Humanity\" required></div><div class=\"form-group\"><label class=\"form-label\" for=\"mission\">Mission Statement</label> <textarea class=\"form-input\" id=\"mission\" name=\"mission\" rows=\"4\" placeholder=\"Tell us about your organization's mission...\" required></textarea></div><div class=\"form-group\"><label class=\"form-label\" for=\"website\">Website <span class=\"text-muted\">(optional)</span></label> <input class=\"form-input\" type=\"url\" id=\"website\" name=\"website\" placeholder=\"https://yourorg.org\"></div><div class=\"form-group\"><label class=\"form-label\" for=\"contact_name\">Contact Name</label> <input class=\"form-input\" type=\"text\" id=\"contact_name\" name=\"contact_name\" placeholder=\"Jane Smith\" required></div><div class=\"form-group\"><label class=\"form-label\" for=\"contact_email\">Contact Email</label> <input class=\"form-input\" type=\"email\" id=\"contact_email\" name=\"contact_email\" placeholder=\"jane@yourorg.org\" required></div><button type=\"submit\" class=\"btn btn-primary\" style=\"width:100%\">Submit Application</button></form></div></div>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -77,12 +90,12 @@ func ApplicationsListPage(applications []model.Application) templ.Component {
 			}()
 		}
 		ctx = templ.InitializeContext(ctx)
-		templ_7745c5c3_Var3 := templ.GetChildren(ctx)
-		if templ_7745c5c3_Var3 == nil {
-			templ_7745c5c3_Var3 = templ.NopComponent
+		templ_7745c5c3_Var4 := templ.GetChildren(ctx)
+		if templ_7745c5c3_Var4 == nil {
+			templ_7745c5c3_Var4 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Var4 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+		templ_7745c5c3_Var5 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 			templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 			templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
 			if !templ_7745c5c3_IsBuffer {
@@ -94,116 +107,116 @@ func ApplicationsListPage(applications []model.Application) templ.Component {
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "<div style=\"margin-bottom:var(--space-6)\"><h1 style=\"font-size:var(--font-size-2xl);font-weight:var(--font-weight-bold)\">NFP Applications</h1><p style=\"color:var(--color-text-secondary);font-size:var(--font-size-sm);margin-top:var(--space-1)\">Review and approve nonprofit applications</p></div>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "<div style=\"margin-bottom:var(--space-6)\"><h1 style=\"font-size:var(--font-size-2xl);font-weight:var(--font-weight-bold)\">NFP Applications</h1><p style=\"color:var(--color-text-secondary);font-size:var(--font-size-sm);margin-top:var(--space-1)\">Review and approve nonprofit applications</p></div>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			if len(applications) == 0 {
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "<div class=\"card\" style=\"text-align:center;padding:var(--space-12)\"><div style=\"font-size:var(--font-size-3xl);margin-bottom:var(--space-4)\">📝</div><p style=\"font-size:var(--font-size-lg);color:var(--color-text-secondary)\">No pending applications</p></div>")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "<div class=\"card\" style=\"text-align:center;padding:var(--space-12)\"><div style=\"font-size:var(--font-size-3xl);margin-bottom:var(--space-4)\">📝</div><p style=\"font-size:var(--font-size-lg);color:var(--color-text-secondary)\">No pending applications</p></div>")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 			} else {
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "<div style=\"display:flex;flex-direction:column;gap:var(--space-3)\">")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "<div style=\"display:flex;flex-direction:column;gap:var(--space-3)\">")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 				for _, app := range applications {
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "<div class=\"card\" style=\"padding:var(--space-4) var(--space-6)\"><div style=\"display:flex;align-items:flex-start;justify-content:space-between\"><div><div style=\"display:flex;align-items:center;gap:var(--space-2);margin-bottom:var(--space-1)\"><span style=\"font-weight:var(--font-weight-semibold)\">")
-					if templ_7745c5c3_Err != nil {
-						return templ_7745c5c3_Err
-					}
-					var templ_7745c5c3_Var5 string
-					templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(app.OrgName)
-					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/applications.templ`, Line: 65, Col: 76}
-					}
-					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
-					if templ_7745c5c3_Err != nil {
-						return templ_7745c5c3_Err
-					}
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "</span> ")
-					if templ_7745c5c3_Err != nil {
-						return templ_7745c5c3_Err
-					}
-					if app.Status == "pending" {
-						templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "<span style=\"background:var(--color-warning, #f59e0b);color:white;padding:2px 8px;border-radius:var(--radius-sm);font-size:var(--font-size-xs)\">Pending</span>")
-						if templ_7745c5c3_Err != nil {
-							return templ_7745c5c3_Err
-						}
-					} else if app.Status == "approved" {
-						templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 8, "<span style=\"background:var(--color-success, #10b981);color:white;padding:2px 8px;border-radius:var(--radius-sm);font-size:var(--font-size-xs)\">Approved</span>")
-						if templ_7745c5c3_Err != nil {
-							return templ_7745c5c3_Err
-						}
-					} else {
-						templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, "<span style=\"background:var(--color-danger);color:white;padding:2px 8px;border-radius:var(--radius-sm);font-size:var(--font-size-xs)\">Rejected</span>")
-						if templ_7745c5c3_Err != nil {
-							return templ_7745c5c3_Err
-						}
-					}
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 10, "</div><p style=\"color:var(--color-text-secondary);font-size:var(--font-size-sm);margin-bottom:var(--space-1)\">")
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "<div class=\"card\" style=\"padding:var(--space-4) var(--space-6)\"><div style=\"display:flex;align-items:flex-start;justify-content:space-between\"><div><div style=\"display:flex;align-items:center;gap:var(--space-2);margin-bottom:var(--space-1)\"><span style=\"font-weight:var(--font-weight-semibold)\">")
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
 					var templ_7745c5c3_Var6 string
-					templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(app.Mission)
+					templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(app.OrgName)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/applications.templ`, Line: 74, Col: 125}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/applications.templ`, Line: 66, Col: 76}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 11, "</p><p style=\"color:var(--color-text-muted);font-size:var(--font-size-xs)\">")
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "</span> ")
+					if templ_7745c5c3_Err != nil {
+						return templ_7745c5c3_Err
+					}
+					if app.Status == "pending" {
+						templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 8, "<span style=\"background:var(--color-warning, #f59e0b);color:white;padding:2px 8px;border-radius:var(--radius-sm);font-size:var(--font-size-xs)\">Pending</span>")
+						if templ_7745c5c3_Err != nil {
+							return templ_7745c5c3_Err
+						}
+					} else if app.Status == "approved" {
+						templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, "<span style=\"background:var(--color-success, #10b981);color:white;padding:2px 8px;border-radius:var(--radius-sm);font-size:var(--font-size-xs)\">Approved</span>")
+						if templ_7745c5c3_Err != nil {
+							return templ_7745c5c3_Err
+						}
+					} else {
+						templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 10, "<span style=\"background:var(--color-danger);color:white;padding:2px 8px;border-radius:var(--radius-sm);font-size:var(--font-size-xs)\">Rejected</span>")
+						if templ_7745c5c3_Err != nil {
+							return templ_7745c5c3_Err
+						}
+					}
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 11, "</div><p style=\"color:var(--color-text-secondary);font-size:var(--font-size-sm);margin-bottom:var(--space-1)\">")
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
 					var templ_7745c5c3_Var7 string
-					templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(app.ContactName)
+					templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(app.Mission)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/applications.templ`, Line: 75, Col: 96}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/applications.templ`, Line: 75, Col: 125}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 12, " — ")
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 12, "</p><p style=\"color:var(--color-text-muted);font-size:var(--font-size-xs)\">")
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
 					var templ_7745c5c3_Var8 string
-					templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinStringErrs(app.ContactEmail)
+					templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinStringErrs(app.ContactName)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/applications.templ`, Line: 75, Col: 121}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/applications.templ`, Line: 76, Col: 96}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var8))
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 13, "</p></div>")
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 13, " — ")
+					if templ_7745c5c3_Err != nil {
+						return templ_7745c5c3_Err
+					}
+					var templ_7745c5c3_Var9 string
+					templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(app.ContactEmail)
+					if templ_7745c5c3_Err != nil {
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/applications.templ`, Line: 76, Col: 121}
+					}
+					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
+					if templ_7745c5c3_Err != nil {
+						return templ_7745c5c3_Err
+					}
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 14, "</p></div>")
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
 					if app.Status == "pending" {
-						templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 14, "<div style=\"display:flex;gap:var(--space-2)\"><button class=\"btn btn-primary\" style=\"padding:var(--space-1) var(--space-3);min-height:auto;font-size:var(--font-size-xs)\">Approve</button> <button class=\"btn btn-ghost\" style=\"padding:var(--space-1) var(--space-3);min-height:auto;font-size:var(--font-size-xs);color:var(--color-danger)\">Reject</button></div>")
+						templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 15, "<div style=\"display:flex;gap:var(--space-2)\"><button class=\"btn btn-primary\" style=\"padding:var(--space-1) var(--space-3);min-height:auto;font-size:var(--font-size-xs)\">Approve</button> <button class=\"btn btn-ghost\" style=\"padding:var(--space-1) var(--space-3);min-height:auto;font-size:var(--font-size-xs);color:var(--color-danger)\">Reject</button></div>")
 						if templ_7745c5c3_Err != nil {
 							return templ_7745c5c3_Err
 						}
 					}
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 15, "</div></div>")
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 16, "</div></div>")
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
 				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 16, "</div>")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 17, "</div>")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = Layout("Applications", true).Render(templ.WithChildren(ctx, templ_7745c5c3_Var4), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = Layout("Applications", true).Render(templ.WithChildren(ctx, templ_7745c5c3_Var5), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

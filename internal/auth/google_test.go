@@ -216,4 +216,3 @@ func TestHandleCallback_ExchangeError(t *testing.T) {
 		t.Error("expected error for bad exchange")
 	}
 }
-

@@ -10,7 +10,7 @@ import (
 // mockAPIKeyRepoForAuth is a test double for service.APIKeyRepository,
 // used by RequireAPIKey and RequireAuthOrAPIKey middleware tests.
 type mockAPIKeyRepoForAuth struct {
-	keys map[string]*model.APIKey // keyed by hash
+	keys   map[string]*model.APIKey // keyed by hash
 	nextID int64
 }
 

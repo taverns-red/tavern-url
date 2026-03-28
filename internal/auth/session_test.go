@@ -7,7 +7,7 @@ import (
 )
 
 func TestSessionStore_SetAndGetUserID(t *testing.T) {
-	store := NewSessionStore("test-secret-key-32-bytes-long!!!")
+	store := NewSessionStore("test-secret-key-32-bytes-long!!!", false)
 
 	// Set the user ID.
 	req := httptest.NewRequest(http.MethodGet, "/", nil)
@@ -39,7 +39,7 @@ func TestSessionStore_SetAndGetUserID(t *testing.T) {
 }
 
 func TestSessionStore_GetUserID_NoSession(t *testing.T) {
-	store := NewSessionStore("test-secret-key-32-bytes-long!!!")
+	store := NewSessionStore("test-secret-key-32-bytes-long!!!", false)
 
 	req := httptest.NewRequest(http.MethodGet, "/", nil)
 	userID, err := store.GetUserID(req)
@@ -52,7 +52,7 @@ func TestSessionStore_GetUserID_NoSession(t *testing.T) {
 }
 
 func TestSessionStore_Clear(t *testing.T) {
-	store := NewSessionStore("test-secret-key-32-bytes-long!!!")
+	store := NewSessionStore("test-secret-key-32-bytes-long!!!", false)
 
 	// Set user first.
 	req := httptest.NewRequest(http.MethodGet, "/", nil)
@@ -85,7 +85,7 @@ func TestSessionStore_Clear(t *testing.T) {
 }
 
 func TestNewSessionStore(t *testing.T) {
-	store := NewSessionStore("any-secret")
+	store := NewSessionStore("any-secret", false)
 	if store.store == nil {
 		t.Error("expected non-nil store")
 	}

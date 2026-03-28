@@ -171,7 +171,7 @@ func TestRequireAPIKey_ValidKey(t *testing.T) {
 func TestRequireAuthOrAPIKey_SessionAuth(t *testing.T) {
 	repo := newMockUserRepo()
 	authSvc := NewService(repo)
-	store := NewSessionStore("test-secret-key-32-bytes-long!!!")
+	store := NewSessionStore("test-secret-key-32-bytes-long!!!", false)
 	apiKeyRepo := newMockAPIKeyRepoForAuth()
 	apiKeySvc := newAPIKeyServiceForAuth(apiKeyRepo)
 
@@ -216,7 +216,7 @@ func TestRequireAuthOrAPIKey_SessionAuth(t *testing.T) {
 func TestRequireAuthOrAPIKey_NoAuth(t *testing.T) {
 	repo := newMockUserRepo()
 	authSvc := NewService(repo)
-	store := NewSessionStore("test-secret-key-32-bytes-long!!!")
+	store := NewSessionStore("test-secret-key-32-bytes-long!!!", false)
 	apiKeyRepo := newMockAPIKeyRepoForAuth()
 	apiKeySvc := newAPIKeyServiceForAuth(apiKeyRepo)
 
@@ -237,7 +237,7 @@ func TestRequireAuthOrAPIKey_NoAuth(t *testing.T) {
 func TestRequireAuthOrAPIKey_APIKeyAuth(t *testing.T) {
 	repo := newMockUserRepo()
 	authSvc := NewService(repo)
-	store := NewSessionStore("test-secret-key-32-bytes-long!!!")
+	store := NewSessionStore("test-secret-key-32-bytes-long!!!", false)
 	apiKeyRepo := newMockAPIKeyRepoForAuth()
 	apiKeySvc := newAPIKeyServiceForAuth(apiKeyRepo)
 
@@ -278,7 +278,7 @@ func TestRequireAuthOrAPIKey_APIKeyAuth(t *testing.T) {
 func TestRequireAuthOrAPIKey_InvalidAPIKey(t *testing.T) {
 	repo := newMockUserRepo()
 	authSvc := NewService(repo)
-	store := NewSessionStore("test-secret-key-32-bytes-long!!!")
+	store := NewSessionStore("test-secret-key-32-bytes-long!!!", false)
 	apiKeyRepo := newMockAPIKeyRepoForAuth()
 	apiKeySvc := newAPIKeyServiceForAuth(apiKeyRepo)
 
@@ -296,4 +296,3 @@ func TestRequireAuthOrAPIKey_InvalidAPIKey(t *testing.T) {
 		t.Errorf("expected 401, got %d", w.Code)
 	}
 }
-

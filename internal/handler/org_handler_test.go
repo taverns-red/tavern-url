@@ -489,7 +489,7 @@ func TestUpdateRole_InvalidJSON(t *testing.T) {
 }
 
 func TestGoogleLoginHandler_Callback_MissingCode(t *testing.T) {
-	store := auth.NewSessionStore("test-secret-key-32-bytes-long!!!")
+	store := auth.NewSessionStore("test-secret-key-32-bytes-long!!!", false)
 	h := NewGoogleLoginHandler(nil, store)
 
 	r := chi.NewRouter()
@@ -505,7 +505,7 @@ func TestGoogleLoginHandler_Callback_MissingCode(t *testing.T) {
 }
 
 func TestNewGoogleLoginHandler(t *testing.T) {
-	store := auth.NewSessionStore("test-secret-key-32-bytes-long!!!")
+	store := auth.NewSessionStore("test-secret-key-32-bytes-long!!!", false)
 	h := NewGoogleLoginHandler(nil, store)
 	if h == nil {
 		t.Fatal("expected non-nil handler")
@@ -514,4 +514,3 @@ func TestNewGoogleLoginHandler(t *testing.T) {
 
 // suppress unused import lint
 var _ = context.Background
-

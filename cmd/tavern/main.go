@@ -2,16 +2,19 @@ package main
 
 import (
 	"context"
+	"crypto/sha256"
 	"fmt"
 	"log"
 	"net/http"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 	"time"
 
 	"github.com/go-chi/chi/v5"
 	chimiddleware "github.com/go-chi/chi/v5/middleware"
+	"github.com/gorilla/csrf"
 	"github.com/jackc/pgx/v5/pgxpool"
 
 	"github.com/taverns-red/tavern-url/internal/auth"
@@ -19,6 +22,7 @@ import (
 	tavmiddleware "github.com/taverns-red/tavern-url/internal/middleware"
 	"github.com/taverns-red/tavern-url/internal/repository"
 	"github.com/taverns-red/tavern-url/internal/service"
+	"github.com/taverns-red/tavern-url/templates"
 )
 
 func main() {
@@ -29,7 +33,13 @@ func main() {
 	if databaseURL == "" {
 		log.Fatal("DATABASE_URL environment variable is required")
 	}
-	sessionSecret := envOrDefault("SESSION_SECRET", "dev-secret-change-me-in-production!!")
+
+	sessionSecret := os.Getenv("SESSION_SECRET")
+	if sessionSecret == "" {
+		log.Fatal("SESSION_SECRET environment variable is required")
+	}
+
+	cookieSecure := envOrDefault("COOKIE_SECURE", "true") == "true"
 
 	// Connect to Postgres.
 	ctx := context.Background()
@@ -57,7 +67,7 @@ func main() {
 	analyticsSvc := service.NewAnalyticsService(clickRepo)
 	apiKeyRepo := repository.NewPgAPIKeyRepository(pool)
 	apiKeySvc := service.NewAPIKeyService(apiKeyRepo)
-	sessionStore := auth.NewSessionStore(sessionSecret)
+	sessionStore := auth.NewSessionStore(sessionSecret, cookieSecure)
 
 	// Wire handlers.
 	linkHandler := handler.NewLinkHandler(linkSvc, analyticsSvc, baseURL)
@@ -122,8 +132,8 @@ func main() {
 	// API routes.
 	r.Route("/api/v1", func(r chi.Router) {
 		// Auth routes (public).
-		r.Post("/auth/register", authHandler.Register)
-		r.Post("/auth/login", authHandler.Login)
+		r.With(rateLimiter.Middleware(tavmiddleware.ByIP)).Post("/auth/register", authHandler.Register)
+		r.With(rateLimiter.Middleware(tavmiddleware.ByIP)).Post("/auth/login", authHandler.Login)
 		r.Post("/auth/logout", authHandler.Logout)
 
 		// Protected routes (session or API key).
@@ -162,10 +172,41 @@ func main() {
 	r.Get("/{slug}", linkHandler.Redirect)
 	r.Post("/{slug}", linkHandler.Redirect)
 
+	// CSRF protection setup.
+	csrfKey := sha256.Sum256([]byte(sessionSecret))
+	csrfMw := csrf.Protect(
+		csrfKey[:],
+		csrf.Secure(cookieSecure),
+		csrf.Path("/"),
+	)
+
+	// Middleware to inject CSRF token into context for Templ.
+	csrfContextMw := func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+			token := csrf.Token(req)
+			ctx := context.WithValue(req.Context(), templates.CSRFContextKey, token)
+			next.ServeHTTP(w, req.WithContext(ctx))
+		})
+	}
+
+	// Middleware to skip CSRF for Bearer token requests.
+	skipCSRFForAPI := func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+			if strings.HasPrefix(req.Header.Get("Authorization"), "Bearer ") {
+				req = csrf.UnsafeSkipCheck(req)
+			}
+			next.ServeHTTP(w, req)
+		})
+	}
+
+	// Wrap the global router.
+	protectedHandler := csrfMw(csrfContextMw(r))
+	finalHandler := skipCSRFForAPI(protectedHandler)
+
 	// Start server with graceful shutdown.
 	srv := &http.Server{
 		Addr:         ":" + port,
-		Handler:      r,
+		Handler:      finalHandler,
 		ReadTimeout:  5 * time.Second,
 		WriteTimeout: 10 * time.Second,
 		IdleTimeout:  120 * time.Second,

@@ -42,30 +42,43 @@ func PasswordGatePage(slug string, errorMsg string) templ.Component {
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div style=\"max-width:400px;margin:0 auto;padding:var(--space-8) 0\"><div class=\"card\" style=\"padding:var(--space-8);text-align:center\"><div style=\"font-size:var(--font-size-3xl);margin-bottom:var(--space-4)\">🔒</div><h1 style=\"font-size:var(--font-size-xl);font-weight:var(--font-weight-bold);margin-bottom:var(--space-2)\">Password Required</h1><p style=\"color:var(--color-text-secondary);margin-bottom:var(--space-6)\">This link is protected. Enter the password to continue.</p><form method=\"POST\" class=\"auth-form\" style=\"text-align:left\"><div class=\"form-group\"><label class=\"form-label\" for=\"password\">Password</label> <input class=\"form-input\" type=\"password\" id=\"password\" name=\"password\" required autofocus></div>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div style=\"max-width:400px;margin:0 auto;padding:var(--space-8) 0\"><div class=\"card\" style=\"padding:var(--space-8);text-align:center\"><div style=\"font-size:var(--font-size-3xl);margin-bottom:var(--space-4)\">🔒</div><h1 style=\"font-size:var(--font-size-xl);font-weight:var(--font-weight-bold);margin-bottom:var(--space-2)\">Password Required</h1><p style=\"color:var(--color-text-secondary);margin-bottom:var(--space-6)\">This link is protected. Enter the password to continue.</p><form method=\"POST\" class=\"auth-form\" style=\"text-align:left\"><input type=\"hidden\" name=\"gorilla.csrf.Token\" value=\"")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var3 string
+			templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(getCSRFToken(ctx))
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/password_gate.templ`, Line: 12, Col: 77}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "\"><div class=\"form-group\"><label class=\"form-label\" for=\"password\">Password</label> <input class=\"form-input\" type=\"password\" id=\"password\" name=\"password\" required autofocus></div>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			if errorMsg != "" {
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "<div style=\"color:var(--color-danger);font-size:var(--font-size-sm);margin-bottom:var(--space-3)\">")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "<div style=\"color:var(--color-danger);font-size:var(--font-size-sm);margin-bottom:var(--space-3)\">")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				var templ_7745c5c3_Var3 string
-				templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(errorMsg)
+				var templ_7745c5c3_Var4 string
+				templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(errorMsg)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/password_gate.templ`, Line: 17, Col: 114}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/password_gate.templ`, Line: 18, Col: 114}
 				}
-				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "</div>")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "</div>")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "<button type=\"submit\" class=\"btn btn-primary\" style=\"width:100%\">Continue</button></form></div></div>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "<button type=\"submit\" class=\"btn btn-primary\" style=\"width:100%\">Continue</button></form></div></div>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}

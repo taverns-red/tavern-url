@@ -196,7 +196,7 @@ func TestUserFromContext_Empty(t *testing.T) {
 func TestRequireAuth_Authenticated(t *testing.T) {
 	repo := newMockUserRepo()
 	svc := NewService(repo)
-	store := NewSessionStore("test-secret-key-32-bytes-long!!!")
+	store := NewSessionStore("test-secret-key-32-bytes-long!!!", false)
 
 	// Register a user.
 	user, err := svc.Register(context.Background(), "auth@test.com", "Auth User", "password1234")
@@ -240,7 +240,7 @@ func TestRequireAuth_Authenticated(t *testing.T) {
 
 func TestRequireAuth_Unauthenticated(t *testing.T) {
 	svc := NewService(newMockUserRepo())
-	store := NewSessionStore("test-secret-key-32-bytes-long!!!")
+	store := NewSessionStore("test-secret-key-32-bytes-long!!!", false)
 
 	protected := RequireAuth(store, svc)(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		t.Error("handler should not be called for unauthenticated request")
@@ -257,7 +257,7 @@ func TestRequireAuth_Unauthenticated(t *testing.T) {
 
 func TestRequireAuth_UserNotFound(t *testing.T) {
 	svc := NewService(newMockUserRepo())
-	store := NewSessionStore("test-secret-key-32-bytes-long!!!")
+	store := NewSessionStore("test-secret-key-32-bytes-long!!!", false)
 
 	// Set a session with a user ID that doesn't exist in the repo.
 	req := httptest.NewRequest(http.MethodGet, "/protected", nil)

@@ -15,6 +15,7 @@ templ ApplicationPage() {
 
 			<div class="card" style="padding:var(--space-8)">
 				<form class="auth-form" method="POST" action="/api/v1/applications">
+					<input type="hidden" name="gorilla.csrf.Token" value={ getCSRFToken(ctx) }/>
 					<div class="form-group">
 						<label class="form-label" for="org_name">Organization Name</label>
 						<input class="form-input" type="text" id="org_name" name="org_name" placeholder="Habitat for Humanity" required/>

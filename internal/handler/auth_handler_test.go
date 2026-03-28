@@ -16,9 +16,8 @@ import (
 	"github.com/taverns-red/tavern-url/internal/model"
 )
 
-
 func TestAuthHandler_Register_JSON_MissingFields(t *testing.T) {
-	store := auth.NewSessionStore("test-secret-key-32-bytes-long!!!")
+	store := auth.NewSessionStore("test-secret-key-32-bytes-long!!!", false)
 	// We can't easily construct an auth.Service from handler package
 	// since it requires repository.UserRepository. Instead, test the
 	// validation paths that don't require service interaction.
@@ -45,7 +44,7 @@ func TestAuthHandler_Register_JSON_MissingFields(t *testing.T) {
 }
 
 func TestAuthHandler_Register_FormEncoded_MissingFields(t *testing.T) {
-	store := auth.NewSessionStore("test-secret-key-32-bytes-long!!!")
+	store := auth.NewSessionStore("test-secret-key-32-bytes-long!!!", false)
 	h := &AuthHandler{authSvc: nil, sessionStore: store}
 
 	r := chi.NewRouter()
@@ -70,7 +69,7 @@ func TestAuthHandler_Register_FormEncoded_MissingFields(t *testing.T) {
 }
 
 func TestAuthHandler_Register_InvalidJSON(t *testing.T) {
-	store := auth.NewSessionStore("test-secret-key-32-bytes-long!!!")
+	store := auth.NewSessionStore("test-secret-key-32-bytes-long!!!", false)
 	h := &AuthHandler{authSvc: nil, sessionStore: store}
 
 	r := chi.NewRouter()
@@ -88,7 +87,7 @@ func TestAuthHandler_Register_InvalidJSON(t *testing.T) {
 }
 
 func TestAuthHandler_Login_JSON_MissingFields(t *testing.T) {
-	store := auth.NewSessionStore("test-secret-key-32-bytes-long!!!")
+	store := auth.NewSessionStore("test-secret-key-32-bytes-long!!!", false)
 	h := &AuthHandler{authSvc: nil, sessionStore: store}
 
 	r := chi.NewRouter()
@@ -107,7 +106,7 @@ func TestAuthHandler_Login_JSON_MissingFields(t *testing.T) {
 }
 
 func TestAuthHandler_Login_FormEncoded_MissingFields(t *testing.T) {
-	store := auth.NewSessionStore("test-secret-key-32-bytes-long!!!")
+	store := auth.NewSessionStore("test-secret-key-32-bytes-long!!!", false)
 	h := &AuthHandler{authSvc: nil, sessionStore: store}
 
 	r := chi.NewRouter()
@@ -126,7 +125,7 @@ func TestAuthHandler_Login_FormEncoded_MissingFields(t *testing.T) {
 }
 
 func TestAuthHandler_Login_InvalidJSON(t *testing.T) {
-	store := auth.NewSessionStore("test-secret-key-32-bytes-long!!!")
+	store := auth.NewSessionStore("test-secret-key-32-bytes-long!!!", false)
 	h := &AuthHandler{authSvc: nil, sessionStore: store}
 
 	r := chi.NewRouter()
@@ -144,7 +143,7 @@ func TestAuthHandler_Login_InvalidJSON(t *testing.T) {
 }
 
 func TestAuthHandler_Logout_JSON(t *testing.T) {
-	store := auth.NewSessionStore("test-secret-key-32-bytes-long!!!")
+	store := auth.NewSessionStore("test-secret-key-32-bytes-long!!!", false)
 	h := &AuthHandler{authSvc: nil, sessionStore: store}
 
 	r := chi.NewRouter()
@@ -168,7 +167,7 @@ func TestAuthHandler_Logout_JSON(t *testing.T) {
 }
 
 func TestAuthHandler_Logout_HTMX(t *testing.T) {
-	store := auth.NewSessionStore("test-secret-key-32-bytes-long!!!")
+	store := auth.NewSessionStore("test-secret-key-32-bytes-long!!!", false)
 	h := &AuthHandler{authSvc: nil, sessionStore: store}
 
 	r := chi.NewRouter()
@@ -287,7 +286,7 @@ func (m *mockUserRepoForAuthHandler) GetByID(_ context.Context, id int64) (*mode
 }
 
 func TestNewAuthHandler(t *testing.T) {
-	store := auth.NewSessionStore("test-secret-key-32-bytes-long!!!")
+	store := auth.NewSessionStore("test-secret-key-32-bytes-long!!!", false)
 	h := NewAuthHandler(nil, store)
 	if h == nil {
 		t.Fatal("expected non-nil handler")
@@ -297,7 +296,7 @@ func TestNewAuthHandler(t *testing.T) {
 func setupAuthHandlerWithService() (*AuthHandler, *chi.Mux) {
 	repo := newMockUserRepoForAuthHandler()
 	authSvc := auth.NewService(repo)
-	store := auth.NewSessionStore("test-secret-key-32-bytes-long!!!")
+	store := auth.NewSessionStore("test-secret-key-32-bytes-long!!!", false)
 	h := NewAuthHandler(authSvc, store)
 
 	r := chi.NewRouter()
@@ -448,4 +447,3 @@ func TestAuthHandler_Login_FormEncoded_Success(t *testing.T) {
 		t.Errorf("expected 200, got %d: %s", w.Code, w.Body.String())
 	}
 }
-

@@ -13,9 +13,9 @@ func init() {
 }
 
 const (
-	sessionName  = "tavern-session"
-	sessionKey   = "user_id"
-	maxAge       = 86400 * 7 // 7 days
+	sessionName = "tavern-session"
+	sessionKey  = "user_id"
+	maxAge      = 86400 * 7 // 7 days
 )
 
 // SessionStore wraps gorilla/sessions for session management.
@@ -24,14 +24,14 @@ type SessionStore struct {
 }
 
 // NewSessionStore creates a new cookie-based session store.
-func NewSessionStore(secret string) SessionStore {
+func NewSessionStore(secret string, secure bool) SessionStore {
 	store := sessions.NewCookieStore([]byte(secret))
 	store.Options = &sessions.Options{
 		Path:     "/",
 		MaxAge:   maxAge,
 		HttpOnly: true,
 		SameSite: http.SameSiteLaxMode,
-		Secure:   false, // Set to true in production behind HTTPS
+		Secure:   secure, // Set to true in production behind HTTPS
 	}
 	return SessionStore{store: store}
 }
