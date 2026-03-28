@@ -1,6 +1,8 @@
 package middleware
 
 import (
+	"net/http"
+	"net/http/httptest"
 	"testing"
 	"time"
 )
@@ -43,3 +45,61 @@ func TestRateLimiter_WindowReset(t *testing.T) {
 		t.Error("request after window reset should be allowed")
 	}
 }
+
+func TestRateLimiter_Middleware_Allowed(t *testing.T) {
+	rl := NewRateLimiter(5, time.Minute)
+
+	var called bool
+	handler := rl.Middleware(ByIP)(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		called = true
+		w.WriteHeader(http.StatusOK)
+	}))
+
+	req := httptest.NewRequest(http.MethodGet, "/", nil)
+	req.RemoteAddr = "1.2.3.4:5678"
+	w := httptest.NewRecorder()
+	handler.ServeHTTP(w, req)
+
+	if !called {
+		t.Error("handler should be called when under rate limit")
+	}
+	if w.Code != http.StatusOK {
+		t.Errorf("expected 200, got %d", w.Code)
+	}
+}
+
+func TestRateLimiter_Middleware_RateLimited(t *testing.T) {
+	rl := NewRateLimiter(1, time.Minute)
+
+	handler := rl.Middleware(ByIP)(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	}))
+
+	req := httptest.NewRequest(http.MethodGet, "/", nil)
+	req.RemoteAddr = "5.6.7.8:9999"
+
+	// First request — allowed.
+	w := httptest.NewRecorder()
+	handler.ServeHTTP(w, req)
+	if w.Code != http.StatusOK {
+		t.Errorf("first request: expected 200, got %d", w.Code)
+	}
+
+	// Second request — rate limited.
+	w2 := httptest.NewRecorder()
+	handler.ServeHTTP(w2, req)
+	if w2.Code != http.StatusTooManyRequests {
+		t.Errorf("second request: expected 429, got %d", w2.Code)
+	}
+}
+
+func TestByIP(t *testing.T) {
+	req := httptest.NewRequest(http.MethodGet, "/", nil)
+	req.RemoteAddr = "192.168.1.1:12345"
+
+	got := ByIP(req)
+	if got != "192.168.1.1:12345" {
+		t.Errorf("expected RemoteAddr, got %q", got)
+	}
+}
+

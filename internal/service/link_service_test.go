@@ -260,3 +260,101 @@ func TestDeleteLink_NotFound(t *testing.T) {
 		t.Errorf("expected ErrLinkNotFound, got: %v", err)
 	}
 }
+
+func TestGetByID_Found(t *testing.T) {
+	repo := newMockLinkRepo()
+	svc := NewLinkService(repo)
+
+	slug := "by-id"
+	link, err := svc.CreateLink(context.Background(), "https://example.com", &slug, nil, nil, "")
+	if err != nil {
+		t.Fatalf("create failed: %v", err)
+	}
+
+	got, err := svc.GetByID(context.Background(), link.ID)
+	if err != nil {
+		t.Fatalf("GetByID failed: %v", err)
+	}
+	if got.Slug != "by-id" {
+		t.Errorf("expected slug by-id, got %q", got.Slug)
+	}
+}
+
+func TestGetByID_NotFound(t *testing.T) {
+	repo := newMockLinkRepo()
+	svc := NewLinkService(repo)
+
+	_, err := svc.GetByID(context.Background(), 999)
+	if !errors.Is(err, repository.ErrLinkNotFound) {
+		t.Errorf("expected ErrLinkNotFound, got: %v", err)
+	}
+}
+
+func TestListLinks(t *testing.T) {
+	repo := newMockLinkRepo()
+	svc := NewLinkService(repo)
+
+	for _, slug := range []string{"list-a", "list-b"} {
+		s := slug
+		if _, err := svc.CreateLink(context.Background(), "https://example.com/"+s, &s, nil, nil, ""); err != nil {
+			t.Fatalf("create failed: %v", err)
+		}
+	}
+
+	links, err := svc.ListLinks(context.Background())
+	if err != nil {
+		t.Fatalf("ListLinks failed: %v", err)
+	}
+	if len(links) != 2 {
+		t.Errorf("expected 2 links, got %d", len(links))
+	}
+}
+
+func TestUpdateLink_Success(t *testing.T) {
+	repo := newMockLinkRepo()
+	svc := NewLinkService(repo)
+
+	slug := "update-me"
+	link, err := svc.CreateLink(context.Background(), "https://old.com", &slug, nil, nil, "")
+	if err != nil {
+		t.Fatalf("create failed: %v", err)
+	}
+
+	newURL := "https://new.com"
+	updated, err := svc.UpdateLink(context.Background(), link.ID, &newURL, nil)
+	if err != nil {
+		t.Fatalf("UpdateLink failed: %v", err)
+	}
+	if updated.OriginalURL != "https://new.com" {
+		t.Errorf("expected new URL, got %q", updated.OriginalURL)
+	}
+}
+
+func TestUpdateLink_NotFound(t *testing.T) {
+	repo := newMockLinkRepo()
+	svc := NewLinkService(repo)
+
+	newURL := "https://nope.com"
+	_, err := svc.UpdateLink(context.Background(), 999, &newURL, nil)
+	if !errors.Is(err, repository.ErrLinkNotFound) {
+		t.Errorf("expected ErrLinkNotFound, got: %v", err)
+	}
+}
+
+func TestUpdateLink_InvalidURL(t *testing.T) {
+	repo := newMockLinkRepo()
+	svc := NewLinkService(repo)
+
+	slug := "update-invalid"
+	link, err := svc.CreateLink(context.Background(), "https://valid.com", &slug, nil, nil, "")
+	if err != nil {
+		t.Fatalf("create failed: %v", err)
+	}
+
+	badURL := "not-a-url"
+	_, err = svc.UpdateLink(context.Background(), link.ID, &badURL, nil)
+	if err == nil {
+		t.Error("expected error for invalid URL")
+	}
+}
+
