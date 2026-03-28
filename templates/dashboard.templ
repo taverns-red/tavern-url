@@ -47,6 +47,16 @@ templ DashboardPage(links []model.Link, baseURL string, query string) {
 						<input class="form-input" type="text" id="slug" name="slug" placeholder="spring-gala" minlength="3" maxlength="64"/>
 						<span class="form-hint">3–64 chars, letters, numbers, and hyphens</span>
 					</div>
+					<div class="form-group">
+						<label class="form-label" for="expires_at">Expiration date <span class="text-muted">(optional)</span></label>
+						<input class="form-input" type="datetime-local" id="expires_at" name="expires_at"/>
+						<span class="form-hint">Link will return 410 Gone after this date</span>
+					</div>
+					<div class="form-group">
+						<label class="form-label" for="max_clicks">Max clicks <span class="text-muted">(optional)</span></label>
+						<input class="form-input" type="number" id="max_clicks" name="max_clicks" min="1" placeholder="e.g. 1000"/>
+						<span class="form-hint">Link will stop redirecting after this many clicks</span>
+					</div>
 					<div id="create-error"></div>
 					<div style="display:flex;gap:var(--space-3);justify-content:flex-end">
 						<button type="button" class="btn btn-secondary" data-modal-close="create-modal">Cancel</button>
@@ -111,10 +121,23 @@ templ LinkList(links []model.Link, baseURL string) {
 								<button class="btn btn-ghost" style="padding:var(--space-1);min-height:auto;font-size:var(--font-size-xs)" data-copy={ fmt.Sprintf("%s/%s", baseURL, link.Slug) }>
 									Copy
 								</button>
+								if link.IsExpired() {
+									<span style="background:var(--color-danger);color:white;padding:2px 8px;border-radius:var(--radius-sm);font-size:var(--font-size-xs);font-weight:var(--font-weight-semibold)">Expired</span>
+								} else if link.IsExhausted() {
+									<span style="background:var(--color-warning, #f59e0b);color:white;padding:2px 8px;border-radius:var(--radius-sm);font-size:var(--font-size-xs);font-weight:var(--font-weight-semibold)">Limit Reached</span>
+								}
 							</div>
-							<p style="color:var(--color-text-secondary);font-size:var(--font-size-sm);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
-								↳ { link.OriginalURL }
-							</p>
+							<div style="display:flex;align-items:center;gap:var(--space-3)">
+								<p style="color:var(--color-text-secondary);font-size:var(--font-size-sm);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin:0">
+									↳ { link.OriginalURL }
+								</p>
+								if link.ExpiresAt != nil {
+									<span style="color:var(--color-text-muted);font-size:var(--font-size-xs);white-space:nowrap">⏰ { link.ExpiresAt.Format("Jan 2, 2006") }</span>
+								}
+								if link.MaxClicks != nil {
+									<span style="color:var(--color-text-muted);font-size:var(--font-size-xs);white-space:nowrap">🔢 { fmt.Sprintf("%d/%d clicks", link.ClickCount, *link.MaxClicks) }</span>
+								}
+							</div>
 						</div>
 						<div style="display:flex;align-items:center;gap:var(--space-2)">
 							<span class="text-sm text-muted">{ link.CreatedAt.Format("Jan 2, 2006") }</span>

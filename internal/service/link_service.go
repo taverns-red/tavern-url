@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"net/url"
+	"time"
 
 	"github.com/taverns-red/tavern-url/internal/model"
 	"github.com/taverns-red/tavern-url/internal/repository"
@@ -25,7 +26,7 @@ func NewLinkService(repo repository.LinkRepository) *LinkService {
 // CreateLink creates a new short link.
 // If customSlug is non-nil and non-empty, it is used as the slug.
 // Otherwise, a random slug is generated.
-func (s *LinkService) CreateLink(ctx context.Context, originalURL string, customSlug *string) (*model.Link, error) {
+func (s *LinkService) CreateLink(ctx context.Context, originalURL string, customSlug *string, expiresAt *time.Time, maxClicks *int64) (*model.Link, error) {
 	// Validate URL.
 	if err := validateURL(originalURL); err != nil {
 		return nil, fmt.Errorf("invalid URL: %w", err)
@@ -33,6 +34,8 @@ func (s *LinkService) CreateLink(ctx context.Context, originalURL string, custom
 
 	link := &model.Link{
 		OriginalURL: originalURL,
+		ExpiresAt:   expiresAt,
+		MaxClicks:   maxClicks,
 	}
 
 	// Determine slug.

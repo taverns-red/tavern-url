@@ -3,9 +3,10 @@ package handler
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"net/http"
+	"strconv"
 	"strings"
+	"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/taverns-red/tavern-url/internal/repository"
@@ -27,8 +28,10 @@ func NewLinkHandler(svc *service.LinkService, analyticsSvc *service.AnalyticsSer
 
 // createLinkRequest is the JSON body for creating a short link.
 type createLinkRequest struct {
-	URL  string  `json:"url"`
-	Slug *string `json:"slug,omitempty"`
+	URL       string     `json:"url"`
+	Slug      *string    `json:"slug,omitempty"`
+	ExpiresAt *time.Time `json:"expires_at,omitempty"`
+	MaxClicks *int64     `json:"max_clicks,omitempty"`
 }
 
 // createLinkResponse is the JSON response after creating a short link.
@@ -51,13 +54,23 @@ func (h *LinkHandler) Create(w http.ResponseWriter, r *http.Request) {
 
 	if isForm {
 		if err := r.ParseForm(); err != nil {
-			writeJSON(w, http.StatusBadRequest, errorResponse{Error: "invalid form data"})
+			writeFormError(w, http.StatusBadRequest, "Invalid form data.")
 			return
 		}
 		req.URL = r.FormValue("url")
 		slug := r.FormValue("slug")
 		if slug != "" {
 			req.Slug = &slug
+		}
+		if ea := r.FormValue("expires_at"); ea != "" {
+			if t, err := time.Parse("2006-01-02T15:04", ea); err == nil {
+				req.ExpiresAt = &t
+			}
+		}
+		if mc := r.FormValue("max_clicks"); mc != "" {
+			if n, err := strconv.ParseInt(mc, 10, 64); err == nil && n > 0 {
+				req.MaxClicks = &n
+			}
 		}
 	} else {
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -67,12 +80,20 @@ func (h *LinkHandler) Create(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if req.URL == "" {
+		if isForm {
+			writeFormError(w, http.StatusBadRequest, "URL is required.")
+			return
+		}
 		writeJSON(w, http.StatusBadRequest, errorResponse{Error: "url is required"})
 		return
 	}
 
-	link, err := h.svc.CreateLink(r.Context(), req.URL, req.Slug)
+	link, err := h.svc.CreateLink(r.Context(), req.URL, req.Slug, req.ExpiresAt, req.MaxClicks)
 	if err != nil {
+		if isForm {
+			writeFormError(w, http.StatusBadRequest, err.Error())
+			return
+		}
 		if errors.Is(err, repository.ErrSlugExists) || containsMsg(err, "already taken") {
 			writeJSON(w, http.StatusConflict, errorResponse{Error: err.Error()})
 			return
@@ -88,19 +109,11 @@ func (h *LinkHandler) Create(w http.ResponseWriter, r *http.Request) {
 	// For HTMX requests, re-render the full link list.
 	if isForm {
 		links, _ := h.svc.ListLinks(r.Context())
-		_ = link // used above
-		w.Header().Set("Content-Type", "text/html; charset=utf-8")
-		w.WriteHeader(http.StatusOK)
-		// Render a simple HTML snippet showing the new link.
-		fmt.Fprintf(w, `<div id="link-list"><div style="display:flex;flex-direction:column;gap:var(--space-3)">`)
-		for _, l := range links {
-			fmt.Fprintf(w, `<div class="card" style="display:flex;align-items:center;gap:var(--space-4);padding:var(--space-4) var(--space-6)"><div style="flex:1;min-width:0"><div style="display:flex;align-items:center;gap:var(--space-2);margin-bottom:var(--space-1)"><a href="%s/%s" target="_blank" style="font-weight:var(--font-weight-semibold);font-size:var(--font-size-base)">%s/%s</a></div><p style="color:var(--color-text-secondary);font-size:var(--font-size-sm);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">↳ %s</p></div><div style="display:flex;align-items:center;gap:var(--space-2)"><span class="text-sm text-muted">%s</span><button class="btn btn-ghost btn-danger" style="padding:var(--space-1) var(--space-2);min-height:auto;font-size:var(--font-size-xs)" hx-delete="/api/v1/links/%d" hx-target="#link-list" hx-swap="outerHTML" hx-confirm="Delete this link?">Delete</button></div></div>`,
-				h.baseURL, l.Slug, h.baseURL, l.Slug, l.OriginalURL, l.CreatedAt.Format("Jan 2, 2006"), l.ID)
-		}
-		fmt.Fprintf(w, `</div></div>`)
+		templates.LinkList(links, h.baseURL).Render(r.Context(), w)
 		return
 	}
 
+	_ = link
 	writeJSON(w, http.StatusCreated, createLinkResponse{
 		ID:          link.ID,
 		Slug:        link.Slug,
@@ -260,7 +273,7 @@ func (h *LinkHandler) BulkCreate(w http.ResponseWriter, r *http.Request) {
 
 	var resp []createLinkResponse
 	for _, u := range req.URLs {
-		link, err := h.svc.CreateLink(r.Context(), u, nil)
+		link, err := h.svc.CreateLink(r.Context(), u, nil, nil, nil)
 		if err != nil {
 			resp = append(resp, createLinkResponse{OriginalURL: u})
 			continue
