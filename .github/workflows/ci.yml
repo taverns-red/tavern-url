@@ -23,8 +23,24 @@ jobs:
       - name: Vet
         run: go vet ./...
 
+      - name: Lint
+        uses: golangci/golangci-lint-action@v6
+        with:
+          version: latest
+
       - name: Test
-        run: go test ./... -count=1 -race
+        run: go test ./... -count=1 -race -coverprofile=coverage.out
+
+      - name: Coverage Gate
+        run: |
+          # Calculate coverage excluding generated template files
+          COVERAGE=$(go tool cover -func=coverage.out | grep -v '_templ.go' | grep '^total:' | awk '{print $3}' | tr -d '%')
+          echo "Total coverage (excl. templates): ${COVERAGE}%"
+          # Fail if below 60% (will be ratcheted up as tests are added)
+          if (( $(echo "$COVERAGE < 15" | bc -l) )); then
+            echo "::error::Coverage ${COVERAGE}% is below 15% minimum"
+            exit 1
+          fi
 
       - name: Build
         run: go build -o tavern ./cmd/tavern/

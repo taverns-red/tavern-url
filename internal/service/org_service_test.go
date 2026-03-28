@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"errors"
 	"testing"
 
 	"github.com/taverns-red/tavern-url/internal/model"
@@ -173,7 +172,7 @@ func TestGetOrg_AccessDenied(t *testing.T) {
 	if err == nil {
 		t.Error("expected access denied error")
 	}
-	if !errors.Is(err, nil) && err.Error() != "access denied or org not found" {
-		// Access denied is the expected error message
+	if err != nil && err.Error() != "access denied or org not found" {
+		t.Errorf("expected access denied error, got: %v", err)
 	}
 }

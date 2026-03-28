@@ -1,0 +1,29 @@
+linters:
+  enable:
+    - errcheck
+    - govet
+    - staticcheck
+    - unused
+    - gosimple
+    - ineffassign
+    - typecheck
+
+linters-settings:
+  errcheck:
+    check-type-assertions: true
+    exclude-functions:
+      # HTTP response writes — errors mean client disconnected, nothing to do.
+      - (net/http.ResponseWriter).Write
+      - (*encoding/json.Encoder).Encode
+      - (io.Writer).Write
+      - (*encoding/csv.Writer).Write
+      # Templ component rendering to http.ResponseWriter — same reasoning.
+      - (github.com/a-h/templ.Component).Render
+      # Test helpers — decode errors will cause test failures naturally.
+      - (*encoding/json.Decoder).Decode
+
+issues:
+  exclude-dirs:
+    - templates  # generated templ code
+  exclude-files:
+    - ".*_templ\\.go$"

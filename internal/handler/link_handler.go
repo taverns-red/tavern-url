@@ -240,7 +240,7 @@ func (h *LinkHandler) Update(w http.ResponseWriter, r *http.Request) {
 	link, err := h.svc.UpdateLink(r.Context(), id, req.URL, req.Slug)
 	if err != nil {
 		if isForm {
-			msg := "Failed to update link."
+			var msg string
 			if errors.Is(err, repository.ErrLinkNotFound) {
 				msg = "Link not found."
 			} else {

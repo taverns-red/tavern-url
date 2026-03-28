@@ -26,7 +26,7 @@ func (r *PgOrgRepository) Create(ctx context.Context, org *model.Org, ownerUserI
 	if err != nil {
 		return err
 	}
-	defer tx.Rollback(ctx)
+	defer func() { _ = tx.Rollback(ctx) }()
 
 	err = tx.QueryRow(ctx,
 		`INSERT INTO orgs (name, slug, created_at, updated_at)
