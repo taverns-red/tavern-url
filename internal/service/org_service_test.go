@@ -176,3 +176,101 @@ func TestGetOrg_AccessDenied(t *testing.T) {
 		t.Errorf("expected access denied error, got: %v", err)
 	}
 }
+
+func TestInviteMember_Success(t *testing.T) {
+	repo := newMockOrgRepo()
+	svc := NewOrgService(repo)
+
+	_, err := svc.CreateOrg(context.Background(), "Invite Org", "invite-org", 1)
+	if err != nil {
+		t.Fatalf("create failed: %v", err)
+	}
+
+	err = svc.InviteMember(context.Background(), "invite-org", 1, "alice@example.com", "member")
+	if err != nil {
+		t.Errorf("expected successful invite, got: %v", err)
+	}
+}
+
+func TestInviteMember_NonOwner(t *testing.T) {
+	repo := newMockOrgRepo()
+	svc := NewOrgService(repo)
+
+	_, err := svc.CreateOrg(context.Background(), "Owner Only", "owner-only", 1)
+	if err != nil {
+		t.Fatalf("create failed: %v", err)
+	}
+
+	// User 2 is not a member — should fail.
+	err = svc.InviteMember(context.Background(), "owner-only", 2, "bob@example.com", "member")
+	if err == nil {
+		t.Error("expected permission denied error")
+	}
+}
+
+func TestInviteMember_InvalidRole(t *testing.T) {
+	repo := newMockOrgRepo()
+	svc := NewOrgService(repo)
+
+	err := svc.InviteMember(context.Background(), "any-org", 1, "x@test.com", "superadmin")
+	if err == nil {
+		t.Error("expected error for invalid role")
+	}
+}
+
+func TestInviteMember_OrgNotFound(t *testing.T) {
+	repo := newMockOrgRepo()
+	svc := NewOrgService(repo)
+
+	err := svc.InviteMember(context.Background(), "nonexistent", 1, "x@test.com", "member")
+	if err == nil {
+		t.Error("expected error for nonexistent org")
+	}
+}
+
+func TestUpdateMemberRole_Success(t *testing.T) {
+	repo := newMockOrgRepo()
+	svc := NewOrgService(repo)
+
+	_, err := svc.CreateOrg(context.Background(), "Role Org", "role-org", 1)
+	if err != nil {
+		t.Fatalf("create failed: %v", err)
+	}
+
+	// Add user 2 as member.
+	_ = svc.InviteMember(context.Background(), "role-org", 1, "member@test.com", "member")
+
+	// Owner (user 1) tries to change their own role — should be blocked.
+	err = svc.UpdateMemberRole(context.Background(), "role-org", 1, 1, "admin")
+	if err == nil {
+		t.Error("expected error when changing owner's role")
+	} else if err.Error() != "cannot change the owner's role" {
+		t.Errorf("expected 'cannot change the owner's role', got: %v", err)
+	}
+}
+
+func TestUpdateMemberRole_InvalidRole(t *testing.T) {
+	repo := newMockOrgRepo()
+	svc := NewOrgService(repo)
+
+	err := svc.UpdateMemberRole(context.Background(), "any-org", 1, 2, "dictator")
+	if err == nil {
+		t.Error("expected error for invalid role")
+	}
+}
+
+func TestUpdateMemberRole_PermissionDenied(t *testing.T) {
+	repo := newMockOrgRepo()
+	svc := NewOrgService(repo)
+
+	_, err := svc.CreateOrg(context.Background(), "Perm Org", "perm-org", 1)
+	if err != nil {
+		t.Fatalf("create failed: %v", err)
+	}
+
+	// User 2 has no membership — should be denied.
+	err = svc.UpdateMemberRole(context.Background(), "perm-org", 2, 1, "admin")
+	if err == nil {
+		t.Error("expected permission denied error")
+	}
+}
