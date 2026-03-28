@@ -8,9 +8,17 @@
 
 - **Short links** with auto-generated Base62 slugs or custom vanity URLs
 - **Privacy-first analytics** — country, device, referrer (no PII, no cookies, no fingerprinting)
-- **QR code generation** — PNG with custom foreground/background colors
+- **QR code generation** — downloadable PNG at any size
 - **Multi-user** with organizations, roles (owner/admin/member), and invites
 - **Dual authentication** — session cookies and API keys (`tvn_` prefix, SHA-256 hashed)
+- **Dark mode** — auto-detects system preference with manual toggle
+- **Bulk link creation** — paste up to 100 URLs at once
+- **Dashboard search** — filter links by URL or slug
+- **Link editing** — update destination URL or slug
+- **Browser extension** — Chrome MV3 for one-click shortening
+- **CSV export** — download analytics for board reports
+- **Custom domains** — DNS TXT verification for branded links
+- **Webhooks** — HMAC-SHA256 signed event delivery
 - **Rate limiting** — configurable per-IP token bucket (60 req/min default)
 - **Server-rendered UI** — HTMX + Templ templates, zero JavaScript frameworks
 
@@ -18,29 +26,41 @@
 
 | Layer | Technology |
 |-------|------------|
-| Language | Go 1.23 |
+| Language | Go 1.25 |
 | Router | chi/v5 |
 | Database | PostgreSQL (pgx/v5) |
-| Frontend | Templ + HTMX |
+| Frontend | Templ + HTMX 2.0 |
 | QR Codes | skip2/go-qrcode |
 | Auth | bcrypt + Google OAuth 2.0 |
+| CSS | Vanilla CSS with custom properties (dark mode) |
+| CI | GitHub Actions |
 | Deploy | Docker + Fly.io |
 
 ## Quickstart
+
+### Prerequisites
+
+- Go 1.25+
+- Docker (for PostgreSQL)
+
+### Local Development
 
 ```bash
 # Clone
 git clone https://github.com/taverns-red/tavern-url.git
 cd tavern-url
 
-# Start PostgreSQL
-docker compose up -d
+# Start PostgreSQL only
+docker compose up -d db
 
-# Run migrations
-goose -dir migrations postgres "postgres://tavern:tavern_dev@localhost:5432/tavern?sslmode=disable" up
+# Set environment variables
+export DATABASE_URL="postgres://tavern:tavern_dev@localhost:5432/tavern?sslmode=disable"
+export PORT=8080
+export BASE_URL="http://localhost:8080"
+export SESSION_SECRET="change-me-to-something-random-32-chars"
 
-# Start the server
-make dev
+# Run the server (applies migrations automatically)
+go run ./cmd/tavern
 # → http://localhost:8080
 ```
 
@@ -64,10 +84,22 @@ All endpoints return JSON. Authentication via session cookie or `Authorization: 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
 | `POST` | `/api/v1/links` | Create a short link |
-| `GET` | `/api/v1/links` | List all links |
+| `POST` | `/api/v1/links/bulk` | Bulk create (1–100 URLs) |
+| `GET` | `/api/v1/links` | List all links (`?q=` search) |
+| `PUT` | `/api/v1/links/{id}` | Edit a link |
 | `DELETE` | `/api/v1/links/{id}` | Delete a link |
 | `GET` | `/api/v1/links/{id}/analytics` | Get link analytics |
-| `GET` | `/api/v1/links/{id}/qr` | Generate QR code (PNG) |
+| `GET` | `/api/v1/links/{id}/analytics/export` | CSV export |
+| `GET` | `/api/v1/links/{id}/qr` | Generate QR code (`?size=512`) |
+
+### Auth
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `POST` | `/api/v1/auth/register` | Create account |
+| `POST` | `/api/v1/auth/login` | Log in |
+| `POST` | `/api/v1/auth/logout` | Log out |
+| `GET` | `/api/v1/auth/me` | Current user |
 
 ### API Keys
 
@@ -85,6 +117,17 @@ All endpoints return JSON. Authentication via session cookie or `Authorization: 
 | `GET` | `/api/v1/orgs` | List your orgs |
 | `POST` | `/api/v1/orgs/{slug}/invite` | Invite a member |
 | `PUT` | `/api/v1/orgs/{slug}/members/{id}/role` | Change member role |
+
+## Browser Extension
+
+A Chrome MV3 extension is included in `/extension/`. To install:
+
+1. Open `chrome://extensions`
+2. Enable "Developer mode"
+3. Click "Load unpacked" and select the `extension/` directory
+4. Click the extension icon on any page to shorten the current URL
+
+Requires an API key — generate one at `/dashboard` or via `POST /api/v1/keys`.
 
 ## Deploy to Fly.io
 

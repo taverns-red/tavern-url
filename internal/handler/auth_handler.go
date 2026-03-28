@@ -3,7 +3,9 @@ package handler
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/taverns-red/tavern-url/internal/auth"
 )
@@ -36,14 +38,21 @@ type userResponse struct {
 	Name  string `json:"name"`
 }
 
+// writeFormError returns an HTML error alert for HTMX form submissions.
+func writeFormError(w http.ResponseWriter, status int, msg string) {
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	w.WriteHeader(status)
+	fmt.Fprintf(w, `<div class="alert alert-error">%s</div>`, msg)
+}
+
 // Register handles POST /api/v1/auth/register
 func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 	var req registerRequest
-	isForm := r.Header.Get("Content-Type") == "application/x-www-form-urlencoded"
+	isForm := strings.HasPrefix(r.Header.Get("Content-Type"), "application/x-www-form-urlencoded")
 
 	if isForm {
 		if err := r.ParseForm(); err != nil {
-			writeJSON(w, http.StatusBadRequest, errorResponse{Error: "invalid form data"})
+			writeFormError(w, http.StatusBadRequest, "Invalid form data.")
 			return
 		}
 		req.Email = r.FormValue("email")
@@ -57,12 +66,28 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if req.Email == "" || req.Password == "" || req.Name == "" {
+		if isForm {
+			writeFormError(w, http.StatusBadRequest, "All fields are required.")
+			return
+		}
 		writeJSON(w, http.StatusBadRequest, errorResponse{Error: "email, name, and password are required"})
 		return
 	}
 
 	user, err := h.authSvc.Register(r.Context(), req.Email, req.Name, req.Password)
 	if err != nil {
+		if isForm {
+			if errors.Is(err, auth.ErrWeakPassword) {
+				writeFormError(w, http.StatusBadRequest, "Password is too weak. Use at least 8 characters.")
+			} else if errors.Is(err, auth.ErrInvalidEmail) {
+				writeFormError(w, http.StatusBadRequest, "Please enter a valid email address.")
+			} else if containsMsg(err, "already registered") {
+				writeFormError(w, http.StatusConflict, "An account with this email already exists.")
+			} else {
+				writeFormError(w, http.StatusInternalServerError, "Something went wrong. Please try again.")
+			}
+			return
+		}
 		if errors.Is(err, auth.ErrWeakPassword) || errors.Is(err, auth.ErrInvalidEmail) {
 			writeJSON(w, http.StatusBadRequest, errorResponse{Error: err.Error()})
 			return
@@ -77,6 +102,10 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 
 	// Auto-login after registration.
 	if err := h.sessionStore.SetUserID(w, r, user.ID); err != nil {
+		if isForm {
+			writeFormError(w, http.StatusInternalServerError, "Account created but login failed. Please log in manually.")
+			return
+		}
 		writeJSON(w, http.StatusInternalServerError, errorResponse{Error: "failed to create session"})
 		return
 	}
@@ -97,11 +126,11 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 // Login handles POST /api/v1/auth/login
 func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	var req loginRequest
-	isForm := r.Header.Get("Content-Type") == "application/x-www-form-urlencoded"
+	isForm := strings.HasPrefix(r.Header.Get("Content-Type"), "application/x-www-form-urlencoded")
 
 	if isForm {
 		if err := r.ParseForm(); err != nil {
-			writeJSON(w, http.StatusBadRequest, errorResponse{Error: "invalid form data"})
+			writeFormError(w, http.StatusBadRequest, "Invalid form data.")
 			return
 		}
 		req.Email = r.FormValue("email")
@@ -114,12 +143,24 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if req.Email == "" || req.Password == "" {
+		if isForm {
+			writeFormError(w, http.StatusBadRequest, "Email and password are required.")
+			return
+		}
 		writeJSON(w, http.StatusBadRequest, errorResponse{Error: "email and password are required"})
 		return
 	}
 
 	user, err := h.authSvc.Login(r.Context(), req.Email, req.Password)
 	if err != nil {
+		if isForm {
+			if errors.Is(err, auth.ErrInvalidCredentials) {
+				writeFormError(w, http.StatusUnauthorized, "Invalid email or password.")
+			} else {
+				writeFormError(w, http.StatusInternalServerError, "Something went wrong. Please try again.")
+			}
+			return
+		}
 		if errors.Is(err, auth.ErrInvalidCredentials) {
 			writeJSON(w, http.StatusUnauthorized, errorResponse{Error: "invalid email or password"})
 			return
@@ -129,6 +170,10 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := h.sessionStore.SetUserID(w, r, user.ID); err != nil {
+		if isForm {
+			writeFormError(w, http.StatusInternalServerError, "Login failed. Please try again.")
+			return
+		}
 		writeJSON(w, http.StatusInternalServerError, errorResponse{Error: "failed to create session"})
 		return
 	}
