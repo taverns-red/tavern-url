@@ -141,3 +141,9 @@
 - **CI coverage formula must only count packages with actual tests.** Using `$1 > 0` in the awk filter excludes 0% packages from the denominator. Without this, the gate is artificially depressed.
 - **Handler tests cover form-encoded paths separately.** Form-encoded Create/Update return HTML partials (200) not JSON (201/200). Need separate tests for each content type.
 - **parseID edge cases: "0" → 0, "" → 0, "abc" → 0.** The hand-rolled parser (no strconv) has specific behavior for these.
+
+## Sprint 72 (Push All Packages Toward 80%)
+
+- **APIKeyHandler needs auth context injection in tests.** Can't use middleware — must wrap handler with `auth.ContextWithUser()` in test setup.
+- **RecordClick uses goroutine — need time.Sleep in test.** The async fire-and-forget pattern requires waiting for the goroutine to complete before asserting.
+- **Middleware/ByIP function is trivially testable.** `ByIP` just returns `r.RemoteAddr`. The `Middleware` function wraps `Allow` in an HTTP handler — easy to test with httptest once you know to pass a key extractor function.
