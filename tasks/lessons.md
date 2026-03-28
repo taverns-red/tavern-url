@@ -160,3 +160,10 @@
 - **OrgService.UpdateMemberRole prevents owner self-demotion.** The error "cannot change the owner's role" doesn't match the handler's `containsMsg(err, "permission")` check, so it falls through to 500.
 - **Mock orgRepo.AddMember uses inviterID not inviteeID.** The test setup treats the invited member as the same user, making it hard to test the UpdateRole success path without a more sophisticated mock.
 - **GoogleLoginHandler.Callback validation is testable without OAuth.** The missing-code check at line 246 catches requests before any Google API call.
+
+## Sprint 75 (Final Push to 80%)
+
+- **HandleCallback's hardcoded Google userinfo URL makes it untestable.** Would need to refactor to accept a configurable userinfo endpoint.
+- **PageHandler APIKeys/Orgs need real mock services.** They call sessionStore.GetUserID() then service.ListKeys/ListUserOrgs, unlike pages that just call isAuthenticated().
+- **StaticFileServer can be tested with t.TempDir() and testing/fstest.MapFS.** Both disk and embedded FS paths are trivially testable.
+- **Auth handler form error paths are separate from JSON error paths.** Each error case (weak password, dup email, wrong password) has distinct form + JSON handling, requiring separate test cases for each.
