@@ -579,4 +579,168 @@ func TestCreate_FormEncoded(t *testing.T) {
 	}
 }
 
+func TestCreate_FormEncoded_MissingURL(t *testing.T) {
+	_, r := setupHandler()
 
+	form := "slug=no-url-form"
+	req := httptest.NewRequest(http.MethodPost, "/api/v1/links", bytes.NewBufferString(form))
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+
+	if w.Code != http.StatusBadRequest {
+		t.Errorf("expected 400, got %d", w.Code)
+	}
+}
+
+func TestUpdate_FormEncoded(t *testing.T) {
+	_, r := setupHandler()
+
+	// Create a link first.
+	body := `{"url": "https://form-update.com", "slug": "form-upd"}`
+	req := httptest.NewRequest(http.MethodPost, "/api/v1/links", bytes.NewBufferString(body))
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+
+	var created createLinkResponse
+	json.NewDecoder(w.Body).Decode(&created)
+
+	// Update via form.
+	form := "url=https%3A%2F%2Fform-updated.com"
+	req = httptest.NewRequest(http.MethodPut, fmt.Sprintf("/api/v1/links/%d", created.ID), bytes.NewBufferString(form))
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	w = httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Errorf("expected 200, got %d: %s", w.Code, w.Body.String())
+	}
+}
+
+func TestUpdate_InvalidJSON(t *testing.T) {
+	_, r := setupHandler()
+
+	req := httptest.NewRequest(http.MethodPut, "/api/v1/links/1", bytes.NewBufferString("not json"))
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+
+	if w.Code != http.StatusBadRequest {
+		t.Errorf("expected 400, got %d", w.Code)
+	}
+}
+
+func TestUpdate_InvalidID(t *testing.T) {
+	_, r := setupHandler()
+
+	body := `{"url": "https://example.com"}`
+	req := httptest.NewRequest(http.MethodPut, "/api/v1/links/abc", bytes.NewBufferString(body))
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+
+	if w.Code != http.StatusBadRequest {
+		t.Errorf("expected 400, got %d", w.Code)
+	}
+}
+
+func TestDelete_InvalidID(t *testing.T) {
+	_, r := setupHandler()
+
+	req := httptest.NewRequest(http.MethodDelete, "/api/v1/links/abc", nil)
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+
+	if w.Code != http.StatusBadRequest {
+		t.Errorf("expected 400 for invalid ID, got %d", w.Code)
+	}
+}
+
+func TestDelete_WithHTMX(t *testing.T) {
+	_, r := setupHandler()
+
+	// Create a link.
+	body := `{"url": "https://htmx-del.com", "slug": "htmx-del"}`
+	req := httptest.NewRequest(http.MethodPost, "/api/v1/links", bytes.NewBufferString(body))
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+
+	var created createLinkResponse
+	json.NewDecoder(w.Body).Decode(&created)
+
+	// Delete with HX-Request header.
+	req = httptest.NewRequest(http.MethodDelete, fmt.Sprintf("/api/v1/links/%d", created.ID), nil)
+	req.Header.Set("HX-Request", "true")
+	w = httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Errorf("expected 200, got %d: %s", w.Code, w.Body.String())
+	}
+}
+
+func TestBulkCreate_InvalidJSON(t *testing.T) {
+	_, r := setupHandler()
+
+	req := httptest.NewRequest(http.MethodPost, "/api/v1/links/bulk", bytes.NewBufferString("not json"))
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+
+	if w.Code != http.StatusBadRequest {
+		t.Errorf("expected 400, got %d", w.Code)
+	}
+}
+
+func TestParseID(t *testing.T) {
+	tests := []struct {
+		input    string
+		expected int64
+	}{
+		{"0", 0},
+		{"1", 1},
+		{"123", 123},
+		{"abc", 0},
+		{"12a", 0},
+		{"", 0},
+	}
+	for _, tc := range tests {
+		got := parseID(tc.input)
+		if got != tc.expected {
+			t.Errorf("parseID(%q): expected %d, got %d", tc.input, tc.expected, got)
+		}
+	}
+}
+
+func TestContainsCI(t *testing.T) {
+	if !containsCI("Hello World", "hello") {
+		t.Error("expected case-insensitive match")
+	}
+	if containsCI("Hello", "xyz") {
+		t.Error("did not expect match")
+	}
+}
+
+func TestWriteJSON(t *testing.T) {
+	w := httptest.NewRecorder()
+	writeJSON(w, http.StatusOK, map[string]string{"key": "value"})
+
+	if w.Code != http.StatusOK {
+		t.Errorf("expected 200, got %d", w.Code)
+	}
+	if ct := w.Header().Get("Content-Type"); ct != "application/json" {
+		t.Errorf("expected application/json, got %q", ct)
+	}
+}
+
+func TestContainsMsg(t *testing.T) {
+	err := fmt.Errorf("slug is already taken")
+	if !containsMsg(err, "already taken") {
+		t.Error("expected containsMsg to find substring")
+	}
+	if containsMsg(nil, "error") {
+		t.Error("expected containsMsg to return false for nil")
+	}
+}
