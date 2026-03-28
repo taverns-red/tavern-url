@@ -1,0 +1,16 @@
+codecov:
+  require_ci_to_pass: true
+
+coverage:
+  status:
+    project:
+      default:
+        target: 20%
+        threshold: 2%
+    patch:
+      default:
+        target: 80%
+
+ignore:
+  - "templates/*_templ.go"
+  - "cmd/**"
