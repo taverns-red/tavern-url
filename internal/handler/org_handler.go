@@ -133,12 +133,28 @@ func (h *OrgHandler) Invite(w http.ResponseWriter, r *http.Request) {
 	}
 
 	slug := chi.URLParam(r, "slug")
+	isForm := strings.HasPrefix(r.Header.Get("Content-Type"), "application/x-www-form-urlencoded")
+
 	var req inviteRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		writeJSON(w, http.StatusBadRequest, errorResponse{Error: "invalid JSON body"})
-		return
+	if isForm {
+		if err := r.ParseForm(); err != nil {
+			writeFormError(w, http.StatusBadRequest, "Invalid form data.")
+			return
+		}
+		req.Email = r.FormValue("email")
+		req.Role = r.FormValue("role")
+	} else {
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+			writeJSON(w, http.StatusBadRequest, errorResponse{Error: "invalid JSON body"})
+			return
+		}
 	}
+
 	if req.Email == "" {
+		if isForm {
+			writeFormError(w, http.StatusBadRequest, "Email is required.")
+			return
+		}
 		writeJSON(w, http.StatusBadRequest, errorResponse{Error: "email is required"})
 		return
 	}
@@ -147,11 +163,22 @@ func (h *OrgHandler) Invite(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := h.orgSvc.InviteMember(r.Context(), slug, user.ID, req.Email, req.Role); err != nil {
+		if isForm {
+			writeFormError(w, http.StatusBadRequest, err.Error())
+			return
+		}
 		if containsMsg(err, "not found") || containsMsg(err, "permission") {
 			writeJSON(w, http.StatusForbidden, errorResponse{Error: err.Error()})
 			return
 		}
 		writeJSON(w, http.StatusInternalServerError, errorResponse{Error: "failed to invite member"})
+		return
+	}
+
+	// For HTMX requests, re-render the org list.
+	if isForm {
+		orgs, _ := h.orgSvc.ListUserOrgs(r.Context(), user.ID)
+		templates.OrgList(orgs).Render(r.Context(), w)
 		return
 	}
 

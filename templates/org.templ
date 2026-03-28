@@ -47,7 +47,7 @@ templ OrgPage(orgs []model.Org) {
 		<div id="invite-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:200;align-items:center;justify-content:center;padding:var(--space-4)">
 			<div class="card" style="max-width:500px;width:100%;padding:var(--space-8)">
 				<h2 style="font-size:var(--font-size-xl);font-weight:var(--font-weight-semibold);margin-bottom:var(--space-4)">Invite Member</h2>
-				<form class="auth-form" id="invite-form" hx-swap="outerHTML" hx-target="#org-list">
+				<form class="auth-form" id="invite-form" hx-swap="outerHTML" hx-target="#org-list" hx-encoding="application/x-www-form-urlencoded">
 					<div class="form-group">
 						<label class="form-label" for="invite-email">Email address</label>
 						<input class="form-input" type="email" id="invite-email" name="email" placeholder="alice@habitat.org" required/>
