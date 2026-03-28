@@ -122,3 +122,9 @@
 - **Security middleware is a pure function — easiest test.** Just call SecurityHeaders(handler), check 6 response headers. Instant 64% middleware coverage.
 - **Email NoopSender test requires stdout capture.** Use `os.Pipe` + `io.Copy` to capture and verify `fmt.Printf` output in NoopSender.Send.
 - **Coverage gate formula averages ALL packages including 0%.** cmd (200 lines) and repository (676 lines) drag the overall average down. Real tested-package average is much higher.
+
+## Sprint 70 (Final Handler & Auth Coverage Push)
+
+- **Mock APIKeyRepository in auth package enables full middleware testing.** RequireAPIKey and RequireAuthOrAPIKey need a real APIKeyService, which needs a repo. Creating a mock in a `_test.go` file in the auth package makes this testable without circular dependencies.
+- **Coverage gate formula averages ALL packages — be precise with thresholds.** With 4 packages at 0% and 5 tested packages averaging 72%, the overall average is ~46%. Always check the actual CI output before setting a gate.
+- **Org handler tests already existed — always check `git log` before writing new tests.** Sprint 65 already had comprehensive org handler tests. Saved time by checking first.
