@@ -1,6 +1,8 @@
 package service
 
 import (
+	"net/http"
+	"net/http/httptest"
 	"testing"
 )
 
@@ -42,5 +44,22 @@ func TestDeriveReferrer(t *testing.T) {
 		if got != tc.expected {
 			t.Errorf("deriveReferrer(%q) = %q, want %q", tc.referer, got, tc.expected)
 		}
+	}
+}
+
+func TestDeriveCountry_CloudflareHeader(t *testing.T) {
+	req := httptest.NewRequest(http.MethodGet, "/", nil)
+	req.Header.Set("CF-IPCountry", "gb")
+	got := deriveCountry(req)
+	if got != "GB" {
+		t.Errorf("expected GB, got %q", got)
+	}
+}
+
+func TestDeriveCountry_NoHeader(t *testing.T) {
+	req := httptest.NewRequest(http.MethodGet, "/", nil)
+	got := deriveCountry(req)
+	if got != "unknown" {
+		t.Errorf("expected unknown, got %q", got)
 	}
 }

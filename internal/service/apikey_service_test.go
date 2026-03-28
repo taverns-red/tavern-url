@@ -127,3 +127,72 @@ func TestKeyHash_NotReversible(t *testing.T) {
 		t.Errorf("stored hash doesn't match SHA-256 of raw key")
 	}
 }
+
+func TestCreateKey_EmptyName(t *testing.T) {
+	svc := NewAPIKeyService(newMockAPIKeyRepo())
+
+	_, _, err := svc.CreateKey(context.Background(), 1, 1, "")
+	if err == nil {
+		t.Error("expected error for empty name")
+	}
+}
+
+func TestListKeys(t *testing.T) {
+	svc := NewAPIKeyService(newMockAPIKeyRepo())
+
+	// Create 3 keys for user 1.
+	for _, name := range []string{"Key A", "Key B", "Key C"} {
+		_, _, err := svc.CreateKey(context.Background(), 1, 1, name)
+		if err != nil {
+			t.Fatalf("create failed: %v", err)
+		}
+	}
+
+	keys, err := svc.ListKeys(context.Background(), 1)
+	if err != nil {
+		t.Fatalf("list failed: %v", err)
+	}
+	if len(keys) != 3 {
+		t.Errorf("expected 3 keys, got %d", len(keys))
+	}
+}
+
+func TestListKeys_EmptyForOtherUser(t *testing.T) {
+	svc := NewAPIKeyService(newMockAPIKeyRepo())
+
+	_, _, _ = svc.CreateKey(context.Background(), 1, 1, "User1 Key")
+
+	keys, err := svc.ListKeys(context.Background(), 999)
+	if err != nil {
+		t.Fatalf("list failed: %v", err)
+	}
+	if len(keys) != 0 {
+		t.Errorf("expected 0 keys for other user, got %d", len(keys))
+	}
+}
+
+func TestDeleteKey(t *testing.T) {
+	svc := NewAPIKeyService(newMockAPIKeyRepo())
+
+	rawKey, key, _ := svc.CreateKey(context.Background(), 1, 1, "To Delete")
+
+	err := svc.DeleteKey(context.Background(), key.ID, 1)
+	if err != nil {
+		t.Fatalf("delete failed: %v", err)
+	}
+
+	// Verify key no longer authenticates.
+	_, err = svc.Authenticate(context.Background(), rawKey)
+	if err == nil {
+		t.Error("expected error authenticating deleted key")
+	}
+}
+
+func TestDeleteKey_NotFound(t *testing.T) {
+	svc := NewAPIKeyService(newMockAPIKeyRepo())
+
+	err := svc.DeleteKey(context.Background(), 999, 1)
+	if err == nil {
+		t.Error("expected error for non-existent key")
+	}
+}
