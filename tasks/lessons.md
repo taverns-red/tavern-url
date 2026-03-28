@@ -154,3 +154,9 @@
 - **Auth handler full-path tests need real auth.Service.** Can't test Register/Login service-interaction code paths with nil service. Need mock UserRepo that properly stores/retrieves users.
 - **GoogleProvider.LoginURL is trivially testable.** Just verify the returned URL contains the client ID and state parameter.
 - **HandleCallback requires mock OAuth token exchange** — deferred to a future sprint as it needs httptest.NewServer + endpoint override.
+
+## Sprint 74 (Auth and Handler to 80%)
+
+- **OrgService.UpdateMemberRole prevents owner self-demotion.** The error "cannot change the owner's role" doesn't match the handler's `containsMsg(err, "permission")` check, so it falls through to 500.
+- **Mock orgRepo.AddMember uses inviterID not inviteeID.** The test setup treats the invited member as the same user, making it hard to test the UpdateRole success path without a more sophisticated mock.
+- **GoogleLoginHandler.Callback validation is testable without OAuth.** The missing-code check at line 246 catches requests before any Google API call.
