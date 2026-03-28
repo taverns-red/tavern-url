@@ -81,3 +81,10 @@
 - **Public vs authenticated routes**: `Docs()` and `Apply()` don't require auth — important for onboarding flow. Consistent `h.isAuthenticated(r)` guard + redirect pattern in all other handlers.
 - **Templ curly braces**: `{slug}` in template text is interpreted as a Go expression. Use string literals like `YOUR-SLUG` or `fmt.Sprintf` instead.
 - **Phase scaling**: As routes proliferate, consider grouping into chi route groups (e.g., `r.Route("/settings", ...)` and `r.Route("/admin", ...)`) to maintain organization.
+
+## Sprint 64 (Quality & Observability)
+
+- **golangci-lint Go version mismatch**: The `golangci-lint-action@v6` prebuilt binary may be compiled with an older Go version than the project targets. Use `go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest` instead to build with the project's Go version.
+- **Coverage gate total calculation**: `go tool cover -func` outputs a `total:` line that includes ALL files. Filtering individual function lines with `grep -v` doesn't recompute the total. Instead, average coverages from `go test -cover` output per package.
+- **Ratcheting thresholds**: Start coverage gates at the current floor (e.g., 8%) instead of the aspirational target (60%). Ratchet up incrementally as tests are added. This prevents blocking CI while still catching regressions.
+- **HTTP write errcheck exclusions**: Excluding `(net/http.ResponseWriter).Write` and `(templ.Component).Render` from errcheck is standard Go practice — when writing to an HTTP response, there's nothing useful to do with the error.
