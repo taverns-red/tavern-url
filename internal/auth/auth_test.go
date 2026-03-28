@@ -3,6 +3,8 @@ package auth
 import (
 	"context"
 	"errors"
+	"net/http"
+	"net/http/httptest"
 	"testing"
 
 	"github.com/taverns-red/tavern-url/internal/model"
@@ -188,5 +190,96 @@ func TestUserFromContext_Empty(t *testing.T) {
 	got := UserFromContext(context.Background())
 	if got != nil {
 		t.Error("expected nil user from empty context")
+	}
+}
+
+func TestRequireAuth_Authenticated(t *testing.T) {
+	repo := newMockUserRepo()
+	svc := NewService(repo)
+	store := NewSessionStore("test-secret-key-32-bytes-long!!!")
+
+	// Register a user.
+	user, err := svc.Register(context.Background(), "auth@test.com", "Auth User", "password1234")
+	if err != nil {
+		t.Fatalf("register failed: %v", err)
+	}
+
+	// Create a request with session.
+	req := httptest.NewRequest(http.MethodGet, "/protected", nil)
+	w := httptest.NewRecorder()
+	if err := store.SetUserID(w, req, user.ID); err != nil {
+		t.Fatalf("SetUserID failed: %v", err)
+	}
+	cookies := w.Result().Cookies()
+
+	// Make the actual request with the session cookie.
+	req2 := httptest.NewRequest(http.MethodGet, "/protected", nil)
+	for _, c := range cookies {
+		req2.AddCookie(c)
+	}
+
+	var calledWithUserID int64
+	protected := RequireAuth(store, svc)(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		u := UserFromContext(r.Context())
+		if u != nil {
+			calledWithUserID = u.ID
+		}
+		w.WriteHeader(http.StatusOK)
+	}))
+
+	w2 := httptest.NewRecorder()
+	protected.ServeHTTP(w2, req2)
+
+	if w2.Code != http.StatusOK {
+		t.Errorf("expected 200, got %d", w2.Code)
+	}
+	if calledWithUserID != user.ID {
+		t.Errorf("expected user ID %d in context, got %d", user.ID, calledWithUserID)
+	}
+}
+
+func TestRequireAuth_Unauthenticated(t *testing.T) {
+	svc := NewService(newMockUserRepo())
+	store := NewSessionStore("test-secret-key-32-bytes-long!!!")
+
+	protected := RequireAuth(store, svc)(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		t.Error("handler should not be called for unauthenticated request")
+	}))
+
+	req := httptest.NewRequest(http.MethodGet, "/protected", nil)
+	w := httptest.NewRecorder()
+	protected.ServeHTTP(w, req)
+
+	if w.Code != http.StatusUnauthorized {
+		t.Errorf("expected 401, got %d", w.Code)
+	}
+}
+
+func TestRequireAuth_UserNotFound(t *testing.T) {
+	svc := NewService(newMockUserRepo())
+	store := NewSessionStore("test-secret-key-32-bytes-long!!!")
+
+	// Set a session with a user ID that doesn't exist in the repo.
+	req := httptest.NewRequest(http.MethodGet, "/protected", nil)
+	w := httptest.NewRecorder()
+	if err := store.SetUserID(w, req, 999); err != nil {
+		t.Fatalf("SetUserID failed: %v", err)
+	}
+	cookies := w.Result().Cookies()
+
+	req2 := httptest.NewRequest(http.MethodGet, "/protected", nil)
+	for _, c := range cookies {
+		req2.AddCookie(c)
+	}
+
+	protected := RequireAuth(store, svc)(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		t.Error("handler should not be called when user not found")
+	}))
+
+	w2 := httptest.NewRecorder()
+	protected.ServeHTTP(w2, req2)
+
+	if w2.Code != http.StatusUnauthorized {
+		t.Errorf("expected 401, got %d", w2.Code)
 	}
 }
