@@ -26,6 +26,22 @@ templ LinkDetailPage(link *model.Link, summary *model.ClickSummary, baseURL stri
 					<p style="color:var(--color-text-muted);font-size:var(--font-size-xs);margin-top:var(--space-2)">
 						Created { link.CreatedAt.Format("Jan 2, 2006 at 3:04 PM") }
 					</p>
+					<div style="display:flex;align-items:center;gap:var(--space-2);margin-top:var(--space-2);flex-wrap:wrap">
+						if link.IsExpired() {
+							<span style="background:var(--color-danger);color:white;padding:2px 8px;border-radius:var(--radius-sm);font-size:var(--font-size-xs);font-weight:var(--font-weight-semibold)">Expired</span>
+						} else if link.IsExhausted() {
+							<span style="background:var(--color-warning, #f59e0b);color:white;padding:2px 8px;border-radius:var(--radius-sm);font-size:var(--font-size-xs);font-weight:var(--font-weight-semibold)">Limit Reached</span>
+						}
+						if link.ExpiresAt != nil && !link.IsExpired() {
+							<span style="color:var(--color-text-secondary);font-size:var(--font-size-xs)">⏰ Expires { link.ExpiresAt.Format("Jan 2, 2006") }</span>
+						}
+						if link.MaxClicks != nil {
+							<span style="color:var(--color-text-secondary);font-size:var(--font-size-xs)">🔢 { fmt.Sprintf("%d/%d clicks", link.ClickCount, *link.MaxClicks) }</span>
+						}
+						if link.IsPasswordProtected() {
+							<span style="font-size:var(--font-size-xs)" title="Password protected">🔒 Password protected</span>
+						}
+					</div>
 				</div>
 				<div style="display:flex;gap:var(--space-2)">
 					<a href={ templ.URL(fmt.Sprintf("/api/v1/links/%d/qr?size=512", link.ID)) } class="btn btn-secondary" download>
