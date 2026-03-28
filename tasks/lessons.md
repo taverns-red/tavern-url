@@ -135,3 +135,9 @@
 - **t.Skip with DATABASE_URL makes integration tests CI-compatible.** Tests skip gracefully in CI without a DB, but run locally with the existing docker-compose postgres.
 - **repository_test is an external test package.** Using `repository_test` forces testing only the public API, not internal struct fields.
 - **Org service and handler tests already existed from Sprint 65.** Always check file existence before writing new test files.
+
+## Sprint 71 (Repository Integration + Handler Coverage)
+
+- **CI coverage formula must only count packages with actual tests.** Using `$1 > 0` in the awk filter excludes 0% packages from the denominator. Without this, the gate is artificially depressed.
+- **Handler tests cover form-encoded paths separately.** Form-encoded Create/Update return HTML partials (200) not JSON (201/200). Need separate tests for each content type.
+- **parseID edge cases: "0" → 0, "" → 0, "abc" → 0.** The hand-rolled parser (no strconv) has specific behavior for these.
