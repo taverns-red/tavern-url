@@ -19,12 +19,13 @@ type PageHandler struct {
 	linkSvc      *service.LinkService
 	analyticsSvc *service.AnalyticsService
 	apiKeySvc    *service.APIKeyService
+	orgSvc       *service.OrgService
 	baseURL      string
 }
 
 // NewPageHandler creates a new PageHandler.
-func NewPageHandler(sessionStore auth.SessionStore, authSvc *auth.Service, linkSvc *service.LinkService, analyticsSvc *service.AnalyticsService, apiKeySvc *service.APIKeyService, baseURL string) *PageHandler {
-	return &PageHandler{sessionStore: sessionStore, authSvc: authSvc, linkSvc: linkSvc, analyticsSvc: analyticsSvc, apiKeySvc: apiKeySvc, baseURL: baseURL}
+func NewPageHandler(sessionStore auth.SessionStore, authSvc *auth.Service, linkSvc *service.LinkService, analyticsSvc *service.AnalyticsService, apiKeySvc *service.APIKeyService, orgSvc *service.OrgService, baseURL string) *PageHandler {
+	return &PageHandler{sessionStore: sessionStore, authSvc: authSvc, linkSvc: linkSvc, analyticsSvc: analyticsSvc, apiKeySvc: apiKeySvc, orgSvc: orgSvc, baseURL: baseURL}
 }
 
 func (h *PageHandler) isAuthenticated(r *http.Request) bool {
@@ -139,4 +140,21 @@ func (h *PageHandler) APIKeys(w http.ResponseWriter, r *http.Request) {
 	}
 
 	templates.APIKeysPage(keys).Render(r.Context(), w)
+}
+
+// Orgs renders the organization management page.
+func (h *PageHandler) Orgs(w http.ResponseWriter, r *http.Request) {
+	userID, err := h.sessionStore.GetUserID(r)
+	if err != nil || userID == 0 {
+		http.Redirect(w, r, "/login", http.StatusFound)
+		return
+	}
+
+	orgs, err := h.orgSvc.ListUserOrgs(r.Context(), userID)
+	if err != nil {
+		http.Error(w, "failed to list organizations", http.StatusInternalServerError)
+		return
+	}
+
+	templates.OrgPage(orgs).Render(r.Context(), w)
 }

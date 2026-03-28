@@ -85,7 +85,7 @@ func main() {
 	}
 
 	// Page handler for server-rendered pages.
-	pageHandler := handler.NewPageHandler(sessionStore, authSvc, linkSvc, analyticsSvc, apiKeySvc, baseURL)
+	pageHandler := handler.NewPageHandler(sessionStore, authSvc, linkSvc, analyticsSvc, apiKeySvc, orgSvc, baseURL)
 
 	// Rate limiter (60 req/min per IP for protected routes).
 	rateLimiter := tavmiddleware.NewRateLimiter(60, time.Minute)
@@ -108,6 +108,7 @@ func main() {
 	r.Get("/dashboard", pageHandler.Dashboard)
 	r.Get("/links/{slug}", pageHandler.LinkDetail)
 	r.Get("/settings/keys", pageHandler.APIKeys)
+	r.Get("/settings/org", pageHandler.Orgs)
 
 	// API routes.
 	r.Route("/api/v1", func(r chi.Router) {

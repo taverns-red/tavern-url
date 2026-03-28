@@ -22,7 +22,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
   // ── Close modal on backdrop click ──
   document.addEventListener('click', function (e) {
-    if (e.target.id === 'create-modal' || e.target.id === 'edit-modal') {
+    var modalIds = ['create-modal', 'edit-modal', 'create-key-modal', 'create-org-modal', 'invite-modal'];
+    if (modalIds.indexOf(e.target.id) !== -1) {
       e.target.style.display = 'none';
     }
   });
@@ -60,10 +61,29 @@ document.addEventListener('DOMContentLoaded', function () {
   // ── Close modal and reset form after successful HTMX request ──
   document.body.addEventListener('htmx:afterRequest', function (e) {
     if (e.detail.successful) {
-      var modal = e.detail.elt.closest('#create-modal') || e.detail.elt.closest('#edit-modal');
-      if (modal) {
-        modal.style.display = 'none';
-        e.detail.elt.reset();
+      var modalIds = ['create-modal', 'edit-modal', 'create-key-modal', 'create-org-modal', 'invite-modal'];
+      for (var i = 0; i < modalIds.length; i++) {
+        var modal = e.detail.elt.closest('#' + modalIds[i]);
+        if (modal) {
+          modal.style.display = 'none';
+          if (e.detail.elt.tagName === 'FORM') e.detail.elt.reset();
+          break;
+        }
+      }
+    }
+  });
+
+  // ── Invite org member ──
+  document.addEventListener('click', function (e) {
+    var btn = e.target.closest('[data-invite-org]');
+    if (btn) {
+      var modal = document.getElementById('invite-modal');
+      var form = document.getElementById('invite-form');
+      if (modal && form) {
+        var slug = btn.getAttribute('data-invite-slug');
+        form.setAttribute('hx-post', '/api/v1/orgs/' + slug + '/invite');
+        if (window.htmx) htmx.process(form);
+        modal.style.display = 'flex';
       }
     }
   });

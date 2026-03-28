@@ -4,10 +4,12 @@ import (
 	"encoding/json"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/taverns-red/tavern-url/internal/auth"
 	"github.com/taverns-red/tavern-url/internal/service"
+	"github.com/taverns-red/tavern-url/templates"
 )
 
 // OrgHandler handles org HTTP requests.
@@ -39,19 +41,38 @@ func (h *OrgHandler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	isForm := strings.HasPrefix(r.Header.Get("Content-Type"), "application/x-www-form-urlencoded")
+
 	var req createOrgRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		writeJSON(w, http.StatusBadRequest, errorResponse{Error: "invalid JSON body"})
-		return
+	if isForm {
+		if err := r.ParseForm(); err != nil {
+			writeFormError(w, http.StatusBadRequest, "Invalid form data.")
+			return
+		}
+		req.Name = r.FormValue("name")
+		req.Slug = r.FormValue("slug")
+	} else {
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+			writeJSON(w, http.StatusBadRequest, errorResponse{Error: "invalid JSON body"})
+			return
+		}
 	}
 
 	if req.Name == "" || req.Slug == "" {
+		if isForm {
+			writeFormError(w, http.StatusBadRequest, "Name and slug are required.")
+			return
+		}
 		writeJSON(w, http.StatusBadRequest, errorResponse{Error: "name and slug are required"})
 		return
 	}
 
 	org, err := h.orgSvc.CreateOrg(r.Context(), req.Name, req.Slug, user.ID)
 	if err != nil {
+		if isForm {
+			writeFormError(w, http.StatusBadRequest, err.Error())
+			return
+		}
 		if containsMsg(err, "already taken") {
 			writeJSON(w, http.StatusConflict, errorResponse{Error: err.Error()})
 			return
@@ -61,6 +82,13 @@ func (h *OrgHandler) Create(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		writeJSON(w, http.StatusInternalServerError, errorResponse{Error: "internal server error"})
+		return
+	}
+
+	// For HTMX requests, re-render the org list.
+	if isForm {
+		orgs, _ := h.orgSvc.ListUserOrgs(r.Context(), user.ID)
+		templates.OrgList(orgs).Render(r.Context(), w)
 		return
 	}
 
