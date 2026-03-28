@@ -73,3 +73,11 @@
 - **Form vs JSON dual paths**: Each handler that supports both HTMX forms and JSON needs `isForm` branching. Extract a `parseRequest` helper to reduce boilerplate.
 - **Password gate POST route**: The `/{slug}` catch-all needed both GET and POST for the password gate. Chi requires explicit `r.Post` alongside `r.Get` — `r.HandleFunc` would also work but is less explicit.
 - **Modal proliferation**: Each new feature adds a modal → backdrop click + auto-close lists grow. Consider a generic modal manager in JS rather than enumerating IDs.
+
+## Sprints 38-63 (Phases 2-6)
+
+- **Batch template creation**: Creating multiple `.templ` files in one go is efficient — templ generate processes all at once. Group related templates (e.g., integrations.templ combines CLI + browser ext + Zapier + embed widget) to reduce file count.
+- **Admin consolidation pattern**: Instead of separate pages per enterprise feature, consolidating SSO/audit/roles/billing/SLA into a single `admin.templ` with card sections reduces routing complexity and cognitive overhead.
+- **Public vs authenticated routes**: `Docs()` and `Apply()` don't require auth — important for onboarding flow. Consistent `h.isAuthenticated(r)` guard + redirect pattern in all other handlers.
+- **Templ curly braces**: `{slug}` in template text is interpreted as a Go expression. Use string literals like `YOUR-SLUG` or `fmt.Sprintf` instead.
+- **Phase scaling**: As routes proliferate, consider grouping into chi route groups (e.g., `r.Route("/settings", ...)` and `r.Route("/admin", ...)`) to maintain organization.
