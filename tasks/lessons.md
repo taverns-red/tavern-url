@@ -167,3 +167,9 @@
 - **PageHandler APIKeys/Orgs need real mock services.** They call sessionStore.GetUserID() then service.ListKeys/ListUserOrgs, unlike pages that just call isAuthenticated().
 - **StaticFileServer can be tested with t.TempDir() and testing/fstest.MapFS.** Both disk and embedded FS paths are trivially testable.
 - **Auth handler form error paths are separate from JSON error paths.** Each error case (weak password, dup email, wrong password) has distinct form + JSON handling, requiring separate test cases for each.
+
+## HandleCallback Refactor
+
+- **Making the userinfo URL configurable was a 1-line field change.** Adding `userInfoURL string` to the struct and defaulting it in the constructor was the minimal change needed.
+- **The full HandleCallback flow is now testable end-to-end.** Token exchange → userinfo fetch → user creation/lookup all tested with httptest.Server.
+- **Auth jumped from 79.7% to 90.5% with just 2 new happy-path tests.** The HandleCallback function has many lines (token exchange, HTTP call, JSON parse, user lookup/create), so each covered path adds a lot of statements.
