@@ -12,6 +12,7 @@ import (
 	"github.com/taverns-red/tavern-url/internal/repository"
 	"github.com/taverns-red/tavern-url/internal/service"
 	"github.com/taverns-red/tavern-url/templates"
+	"golang.org/x/crypto/bcrypt"
 )
 
 // LinkHandler handles HTTP requests for link operations.
@@ -32,6 +33,7 @@ type createLinkRequest struct {
 	Slug      *string    `json:"slug,omitempty"`
 	ExpiresAt *time.Time `json:"expires_at,omitempty"`
 	MaxClicks *int64     `json:"max_clicks,omitempty"`
+	Password  string     `json:"password,omitempty"`
 }
 
 // createLinkResponse is the JSON response after creating a short link.
@@ -72,6 +74,7 @@ func (h *LinkHandler) Create(w http.ResponseWriter, r *http.Request) {
 				req.MaxClicks = &n
 			}
 		}
+		req.Password = r.FormValue("password")
 	} else {
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 			writeJSON(w, http.StatusBadRequest, errorResponse{Error: "invalid JSON body"})
@@ -88,7 +91,7 @@ func (h *LinkHandler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	link, err := h.svc.CreateLink(r.Context(), req.URL, req.Slug, req.ExpiresAt, req.MaxClicks)
+	link, err := h.svc.CreateLink(r.Context(), req.URL, req.Slug, req.ExpiresAt, req.MaxClicks, req.Password)
 	if err != nil {
 		if isForm {
 			writeFormError(w, http.StatusBadRequest, err.Error())
@@ -122,7 +125,7 @@ func (h *LinkHandler) Create(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// Redirect handles GET /{slug}
+// Redirect handles GET/POST /{slug}
 func (h *LinkHandler) Redirect(w http.ResponseWriter, r *http.Request) {
 	slug := chi.URLParam(r, "slug")
 	if slug == "" {
@@ -144,6 +147,21 @@ func (h *LinkHandler) Redirect(w http.ResponseWriter, r *http.Request) {
 	if link.IsExpired() || link.IsExhausted() {
 		http.Error(w, "this link has expired or reached its click limit", http.StatusGone)
 		return
+	}
+
+	// Password-protected link gate.
+	if link.IsPasswordProtected() {
+		if r.Method == http.MethodGet {
+			templates.PasswordGatePage(slug, "").Render(r.Context(), w)
+			return
+		}
+		// POST — validate password.
+		_ = r.ParseForm()
+		password := r.FormValue("password")
+		if err := bcrypt.CompareHashAndPassword([]byte(*link.PasswordHash), []byte(password)); err != nil {
+			templates.PasswordGatePage(slug, "Incorrect password.").Render(r.Context(), w)
+			return
+		}
 	}
 
 	// Record click asynchronously (non-blocking).
@@ -273,7 +291,7 @@ func (h *LinkHandler) BulkCreate(w http.ResponseWriter, r *http.Request) {
 
 	var resp []createLinkResponse
 	for _, u := range req.URLs {
-		link, err := h.svc.CreateLink(r.Context(), u, nil, nil, nil)
+		link, err := h.svc.CreateLink(r.Context(), u, nil, nil, nil, "")
 		if err != nil {
 			resp = append(resp, createLinkResponse{OriginalURL: u})
 			continue

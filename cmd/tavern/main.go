@@ -151,6 +151,7 @@ func main() {
 
 	// Redirect — must be last to avoid catching page routes.
 	r.Get("/{slug}", linkHandler.Redirect)
+	r.Post("/{slug}", linkHandler.Redirect)
 
 	// Start server with graceful shutdown.
 	srv := &http.Server{

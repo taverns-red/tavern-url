@@ -9,6 +9,7 @@ import (
 
 	"github.com/taverns-red/tavern-url/internal/model"
 	"github.com/taverns-red/tavern-url/internal/repository"
+	"golang.org/x/crypto/bcrypt"
 )
 
 const maxSlugRetries = 5
@@ -26,7 +27,7 @@ func NewLinkService(repo repository.LinkRepository) *LinkService {
 // CreateLink creates a new short link.
 // If customSlug is non-nil and non-empty, it is used as the slug.
 // Otherwise, a random slug is generated.
-func (s *LinkService) CreateLink(ctx context.Context, originalURL string, customSlug *string, expiresAt *time.Time, maxClicks *int64) (*model.Link, error) {
+func (s *LinkService) CreateLink(ctx context.Context, originalURL string, customSlug *string, expiresAt *time.Time, maxClicks *int64, password string) (*model.Link, error) {
 	// Validate URL.
 	if err := validateURL(originalURL); err != nil {
 		return nil, fmt.Errorf("invalid URL: %w", err)
@@ -36,6 +37,16 @@ func (s *LinkService) CreateLink(ctx context.Context, originalURL string, custom
 		OriginalURL: originalURL,
 		ExpiresAt:   expiresAt,
 		MaxClicks:   maxClicks,
+	}
+
+	// Hash password if provided.
+	if password != "" {
+		hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+		if err != nil {
+			return nil, fmt.Errorf("failed to hash password: %w", err)
+		}
+		h := string(hash)
+		link.PasswordHash = &h
 	}
 
 	// Determine slug.

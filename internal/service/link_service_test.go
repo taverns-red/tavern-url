@@ -85,7 +85,7 @@ func TestCreateLink_AutoSlug(t *testing.T) {
 	repo := newMockLinkRepo()
 	svc := NewLinkService(repo)
 
-	link, err := svc.CreateLink(context.Background(), "https://www.habitat.org", nil, nil, nil)
+	link, err := svc.CreateLink(context.Background(), "https://www.habitat.org", nil, nil, nil, "")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -108,7 +108,7 @@ func TestCreateLink_CustomSlug(t *testing.T) {
 	svc := NewLinkService(repo)
 
 	slug := "spring-gala"
-	link, err := svc.CreateLink(context.Background(), "https://www.redcross.org", &slug, nil, nil)
+	link, err := svc.CreateLink(context.Background(), "https://www.redcross.org", &slug, nil, nil, "")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -122,12 +122,12 @@ func TestCreateLink_DuplicateCustomSlug(t *testing.T) {
 	svc := NewLinkService(repo)
 
 	slug := "my-link"
-	_, err := svc.CreateLink(context.Background(), "https://example.com", &slug, nil, nil)
+	_, err := svc.CreateLink(context.Background(), "https://example.com", &slug, nil, nil, "")
 	if err != nil {
 		t.Fatalf("first create failed: %v", err)
 	}
 
-	_, err = svc.CreateLink(context.Background(), "https://other.com", &slug, nil, nil)
+	_, err = svc.CreateLink(context.Background(), "https://other.com", &slug, nil, nil, "")
 	if err == nil {
 		t.Error("expected error for duplicate slug, got nil")
 	}
@@ -145,7 +145,7 @@ func TestCreateLink_InvalidURL(t *testing.T) {
 	}
 
 	for _, u := range cases {
-		_, err := svc.CreateLink(context.Background(), u, nil, nil, nil)
+		_, err := svc.CreateLink(context.Background(), u, nil, nil, nil, "")
 		if err == nil {
 			t.Errorf("expected error for invalid URL %q, got nil", u)
 		}
@@ -157,7 +157,7 @@ func TestCreateLink_InvalidCustomSlug(t *testing.T) {
 	svc := NewLinkService(repo)
 
 	slug := "ab" // too short
-	_, err := svc.CreateLink(context.Background(), "https://example.com", &slug, nil, nil)
+	_, err := svc.CreateLink(context.Background(), "https://example.com", &slug, nil, nil, "")
 	if err == nil {
 		t.Error("expected error for too-short custom slug, got nil")
 	}
@@ -176,7 +176,7 @@ func TestCreateLink_AutoSlugRetry(t *testing.T) {
 	}
 
 	svc := NewLinkService(repo)
-	link, err := svc.CreateLink(context.Background(), "https://example.com", nil, nil, nil)
+	link, err := svc.CreateLink(context.Background(), "https://example.com", nil, nil, nil, "")
 	if err != nil {
 		t.Fatalf("expected success after retries, got: %v", err)
 	}
@@ -195,7 +195,7 @@ func TestCreateLink_AutoSlugExhausted(t *testing.T) {
 	}
 
 	svc := NewLinkService(repo)
-	_, err := svc.CreateLink(context.Background(), "https://example.com", nil, nil, nil)
+	_, err := svc.CreateLink(context.Background(), "https://example.com", nil, nil, nil, "")
 	if err == nil {
 		t.Error("expected error after exhausted retries, got nil")
 	}
@@ -206,7 +206,7 @@ func TestGetBySlug_Found(t *testing.T) {
 	svc := NewLinkService(repo)
 
 	slug := "test-link"
-	_, err := svc.CreateLink(context.Background(), "https://example.com", &slug, nil, nil)
+	_, err := svc.CreateLink(context.Background(), "https://example.com", &slug, nil, nil, "")
 	if err != nil {
 		t.Fatalf("create failed: %v", err)
 	}
@@ -235,7 +235,7 @@ func TestDeleteLink_Success(t *testing.T) {
 	svc := NewLinkService(repo)
 
 	slug := "to-delete"
-	link, err := svc.CreateLink(context.Background(), "https://example.com", &slug, nil, nil)
+	link, err := svc.CreateLink(context.Background(), "https://example.com", &slug, nil, nil, "")
 	if err != nil {
 		t.Fatalf("create failed: %v", err)
 	}
