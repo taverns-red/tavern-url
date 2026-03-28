@@ -87,3 +87,149 @@ func TestUserFromContext_Nil(t *testing.T) {
 		t.Errorf("expected nil for empty context, got %+v", got)
 	}
 }
+
+func TestRequireAPIKey_MissingHeader(t *testing.T) {
+	repo := newMockUserRepo()
+	authSvc := NewService(repo)
+	apiKeyRepo := newMockAPIKeyRepoForAuth()
+	apiKeySvc := newAPIKeyServiceForAuth(apiKeyRepo)
+
+	middleware := RequireAPIKey(apiKeySvc, authSvc)
+	handler := middleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		t.Error("handler should not be called without API key")
+	}))
+
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/test", nil)
+	w := httptest.NewRecorder()
+	handler.ServeHTTP(w, req)
+
+	if w.Code != http.StatusUnauthorized {
+		t.Errorf("expected 401, got %d", w.Code)
+	}
+}
+
+func TestRequireAPIKey_InvalidKey(t *testing.T) {
+	repo := newMockUserRepo()
+	authSvc := NewService(repo)
+	apiKeyRepo := newMockAPIKeyRepoForAuth()
+	apiKeySvc := newAPIKeyServiceForAuth(apiKeyRepo)
+
+	middleware := RequireAPIKey(apiKeySvc, authSvc)
+	handler := middleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		t.Error("handler should not be called with invalid key")
+	}))
+
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/test", nil)
+	req.Header.Set("Authorization", "Bearer tvn_invalid_key")
+	w := httptest.NewRecorder()
+	handler.ServeHTTP(w, req)
+
+	if w.Code != http.StatusUnauthorized {
+		t.Errorf("expected 401, got %d", w.Code)
+	}
+}
+
+func TestRequireAPIKey_ValidKey(t *testing.T) {
+	repo := newMockUserRepo()
+	authSvc := NewService(repo)
+	// Register a user first.
+	user, err := authSvc.Register(context.Background(), "apikey@test.com", "API User", "password1234")
+	if err != nil {
+		t.Fatalf("register failed: %v", err)
+	}
+
+	apiKeyRepo := newMockAPIKeyRepoForAuth()
+	apiKeySvc := newAPIKeyServiceForAuth(apiKeyRepo)
+	rawKey, _, err := apiKeySvc.CreateKey(context.Background(), user.ID, 0, "Test Key")
+	if err != nil {
+		t.Fatalf("create key failed: %v", err)
+	}
+
+	var gotUserID int64
+	middleware := RequireAPIKey(apiKeySvc, authSvc)
+	handler := middleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		u := UserFromContext(r.Context())
+		if u != nil {
+			gotUserID = u.ID
+		}
+		w.WriteHeader(http.StatusOK)
+	}))
+
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/test", nil)
+	req.Header.Set("Authorization", "Bearer "+rawKey)
+	w := httptest.NewRecorder()
+	handler.ServeHTTP(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Errorf("expected 200, got %d: %s", w.Code, w.Body.String())
+	}
+	if gotUserID != user.ID {
+		t.Errorf("expected user ID %d, got %d", user.ID, gotUserID)
+	}
+}
+
+func TestRequireAuthOrAPIKey_SessionAuth(t *testing.T) {
+	repo := newMockUserRepo()
+	authSvc := NewService(repo)
+	store := NewSessionStore("test-secret-key-32-bytes-long!!!")
+	apiKeyRepo := newMockAPIKeyRepoForAuth()
+	apiKeySvc := newAPIKeyServiceForAuth(apiKeyRepo)
+
+	user, err := authSvc.Register(context.Background(), "dual@test.com", "Dual User", "password1234")
+	if err != nil {
+		t.Fatalf("register failed: %v", err)
+	}
+
+	// Set session.
+	req := httptest.NewRequest(http.MethodGet, "/test", nil)
+	w := httptest.NewRecorder()
+	if err := store.SetUserID(w, req, user.ID); err != nil {
+		t.Fatalf("SetUserID failed: %v", err)
+	}
+	cookies := w.Result().Cookies()
+
+	var gotUserID int64
+	middleware := RequireAuthOrAPIKey(store, authSvc, apiKeySvc)
+	handler := middleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		u := UserFromContext(r.Context())
+		if u != nil {
+			gotUserID = u.ID
+		}
+		w.WriteHeader(http.StatusOK)
+	}))
+
+	req2 := httptest.NewRequest(http.MethodGet, "/test", nil)
+	for _, c := range cookies {
+		req2.AddCookie(c)
+	}
+	w2 := httptest.NewRecorder()
+	handler.ServeHTTP(w2, req2)
+
+	if w2.Code != http.StatusOK {
+		t.Errorf("expected 200, got %d", w2.Code)
+	}
+	if gotUserID != user.ID {
+		t.Errorf("expected user ID %d, got %d", user.ID, gotUserID)
+	}
+}
+
+func TestRequireAuthOrAPIKey_NoAuth(t *testing.T) {
+	repo := newMockUserRepo()
+	authSvc := NewService(repo)
+	store := NewSessionStore("test-secret-key-32-bytes-long!!!")
+	apiKeyRepo := newMockAPIKeyRepoForAuth()
+	apiKeySvc := newAPIKeyServiceForAuth(apiKeyRepo)
+
+	middleware := RequireAuthOrAPIKey(store, authSvc, apiKeySvc)
+	handler := middleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		t.Error("handler should not be called without auth")
+	}))
+
+	req := httptest.NewRequest(http.MethodGet, "/test", nil)
+	w := httptest.NewRecorder()
+	handler.ServeHTTP(w, req)
+
+	if w.Code != http.StatusUnauthorized {
+		t.Errorf("expected 401, got %d", w.Code)
+	}
+}
