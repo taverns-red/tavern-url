@@ -173,3 +173,9 @@
 - **Making the userinfo URL configurable was a 1-line field change.** Adding `userInfoURL string` to the struct and defaulting it in the constructor was the minimal change needed.
 - **The full HandleCallback flow is now testable end-to-end.** Token exchange → userinfo fetch → user creation/lookup all tested with httptest.Server.
 - **Auth jumped from 79.7% to 90.5% with just 2 new happy-path tests.** The HandleCallback function has many lines (token exchange, HTTP call, JSON parse, user lookup/create), so each covered path adds a lot of statements.
+
+## CSRF Injection with Templ & HTMX
+
+- **Avoid modifying every template:** Instead of passing \`csrfToken string\` into 15+ different \`templ\` components, inject it via \`context.WithValue\` in a middleware running *after* \`csrf.Protect\`.
+- **Staticcheck context keys:** Never use a built-in primitive (like \`string\`) as a context key to avoid \`SA1029\`. Use a custom type, e.g., \`type contextKey string\`.
+- **HTMX global config:** Adding an event listener for \`htmx:configRequest\` to read a \`<meta>\` tag and inject \`X-CSRF-Token\` works perfectly to protect all \`hx-post\` forms automatically without boilerplate.
