@@ -282,3 +282,103 @@ func TestHealth(t *testing.T) {
 		t.Errorf("expected status ok, got %q", resp["status"])
 	}
 }
+
+func TestRedirect_PasswordProtected_ShowsGate(t *testing.T) {
+	_, r := setupPasswordHandler()
+
+	// Create a password-protected link via JSON API.
+	body := `{"url": "https://secret.example.com", "slug": "secret", "password": "hunter2"}`
+	req := httptest.NewRequest(http.MethodPost, "/api/v1/links", bytes.NewBufferString(body))
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+
+	if w.Code != http.StatusCreated {
+		t.Fatalf("create failed: %d: %s", w.Code, w.Body.String())
+	}
+
+	// GET /secret — should show password gate (200), NOT redirect.
+	req = httptest.NewRequest(http.MethodGet, "/secret", nil)
+	w = httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Errorf("expected 200 (gate page), got %d", w.Code)
+	}
+	// Body should contain password form elements.
+	if !bytes.Contains(w.Body.Bytes(), []byte("password")) {
+		t.Error("expected gate page to mention password")
+	}
+}
+
+func TestRedirect_PasswordProtected_CorrectPassword(t *testing.T) {
+	_, r := setupPasswordHandler()
+
+	body := `{"url": "https://secret2.example.com", "slug": "secret2", "password": "correct-horse"}`
+	req := httptest.NewRequest(http.MethodPost, "/api/v1/links", bytes.NewBufferString(body))
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+
+	if w.Code != http.StatusCreated {
+		t.Fatalf("create failed: %d: %s", w.Code, w.Body.String())
+	}
+
+	// POST /secret2 with correct password — should 302 redirect.
+	form := "password=correct-horse"
+	req = httptest.NewRequest(http.MethodPost, "/secret2", bytes.NewBufferString(form))
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	w = httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+
+	if w.Code != http.StatusFound {
+		t.Errorf("expected 302 redirect, got %d", w.Code)
+	}
+	if loc := w.Header().Get("Location"); loc != "https://secret2.example.com" {
+		t.Errorf("expected redirect to original URL, got %q", loc)
+	}
+}
+
+func TestRedirect_PasswordProtected_WrongPassword(t *testing.T) {
+	_, r := setupPasswordHandler()
+
+	body := `{"url": "https://secret3.example.com", "slug": "secret3", "password": "right-pw"}`
+	req := httptest.NewRequest(http.MethodPost, "/api/v1/links", bytes.NewBufferString(body))
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+
+	if w.Code != http.StatusCreated {
+		t.Fatalf("create failed: %d: %s", w.Code, w.Body.String())
+	}
+
+	// POST /secret3 with wrong password — should re-render gate.
+	form := "password=wrong-pw"
+	req = httptest.NewRequest(http.MethodPost, "/secret3", bytes.NewBufferString(form))
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	w = httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Errorf("expected 200 (gate re-render), got %d", w.Code)
+	}
+	if !bytes.Contains(w.Body.Bytes(), []byte("Incorrect")) {
+		t.Error("expected error message about incorrect password")
+	}
+}
+
+// setupPasswordHandler creates a handler with POST route for password gate testing.
+func setupPasswordHandler() (*LinkHandler, *chi.Mux) {
+	repo := newMockRepo()
+	svc := service.NewLinkService(repo)
+	h := NewLinkHandler(svc, nil, "http://localhost:8080")
+
+	r := chi.NewRouter()
+	r.Post("/api/v1/links", h.Create)
+	r.Get("/{slug}", h.Redirect)
+	r.Post("/{slug}", h.Redirect) // Password gate POST
+	r.Get("/health", Health)
+
+	return h, r
+}
+
