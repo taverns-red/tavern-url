@@ -115,3 +115,10 @@
 - **RequireAuth middleware is testable with real gorilla/sessions.** Use `NewSessionStore` with a test secret, `SetUserID` to write a cookie, then pass cookies to the middleware-wrapped handler. No HTTP server needed.
 - **Mock click repos can return hardcoded summaries.** Analytics handler tests don't need real data — a mock ClickRepository returning static ClickSummary objects is sufficient for handler-level testing.
 - **errcheck catches test setup ignoring returns.** Even one-line test setup like `store.SetUserID(w, req, 42)` must handle or explicitly discard the error return.
+
+## Sprint 69 (Middleware, Email & Handler Coverage)
+
+- **Handler validation tests don't need a real auth service.** Register/Login checks for empty fields before calling the service, so tests with `authSvc: nil` safely cover those paths.
+- **Security middleware is a pure function — easiest test.** Just call SecurityHeaders(handler), check 6 response headers. Instant 64% middleware coverage.
+- **Email NoopSender test requires stdout capture.** Use `os.Pipe` + `io.Copy` to capture and verify `fmt.Printf` output in NoopSender.Send.
+- **Coverage gate formula averages ALL packages including 0%.** cmd (200 lines) and repository (676 lines) drag the overall average down. Real tested-package average is much higher.
