@@ -48,9 +48,9 @@ jobs:
           COVERAGE=$(go test ./... -coverprofile=coverage.out 2>&1 | grep 'coverage:' | grep -v 'templates' | awk '{print $5}' | tr -d '%' | awk '{sum+=$1; n++} END {if(n>0) printf "%.1f", sum/n; else print "0"}')
           echo "Average coverage (tested packages, excl. templates): ${COVERAGE}%"
           # Gate includes ALL packages (some at 0%). Tested-only avg is 62.4%.
-          # Ratchet to 39% after Sprint 68 (auth 52.7%, handler 42.8%)
-          if (( $(echo "$COVERAGE < 39" | bc -l) )); then
-            echo "::error::Coverage ${COVERAGE}% is below 39% minimum"
+          # Ratchet to 44% after Sprint 69 after Sprint 68 (auth 52.7%, handler 42.8%)
+          if (( $(echo "$COVERAGE < 44" | bc -l) )); then
+            echo "::error::Coverage ${COVERAGE}% is below 44% minimum"
             exit 1
           fi
 
