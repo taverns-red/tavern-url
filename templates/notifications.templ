@@ -1,0 +1,46 @@
+package templates
+
+// NotificationsPage renders the notification center.
+templ NotificationsPage() {
+	@Layout("Notifications", true) {
+		<div style="margin-bottom:var(--space-6)">
+			<h1 style="font-size:var(--font-size-2xl);font-weight:var(--font-weight-bold)">Notifications</h1>
+			<p style="color:var(--color-text-secondary);font-size:var(--font-size-sm);margin-top:var(--space-1)">Stay up to date with your links</p>
+		</div>
+
+		<div id="notification-list">
+			<div class="card" style="text-align:center;padding:var(--space-12)">
+				<div style="font-size:var(--font-size-3xl);margin-bottom:var(--space-4)">🔔</div>
+				<p style="font-size:var(--font-size-lg);color:var(--color-text-secondary);margin-bottom:var(--space-2)">All caught up!</p>
+				<p style="color:var(--color-text-muted)">You'll see notifications here when your links hit milestones.</p>
+			</div>
+		</div>
+
+		<div class="card" style="margin-top:var(--space-6)">
+			<h2 style="font-size:var(--font-size-lg);font-weight:var(--font-weight-semibold);margin-bottom:var(--space-4)">Notification Preferences</h2>
+			<div style="display:flex;flex-direction:column;gap:var(--space-3)">
+				<label style="display:flex;align-items:center;gap:var(--space-3);cursor:pointer">
+					<input type="checkbox" checked style="cursor:pointer"/>
+					<div>
+						<div style="font-weight:var(--font-weight-medium);font-size:var(--font-size-sm)">Click milestones</div>
+						<div style="color:var(--color-text-muted);font-size:var(--font-size-xs)">Get notified when a link reaches 100, 1K, 10K clicks</div>
+					</div>
+				</label>
+				<label style="display:flex;align-items:center;gap:var(--space-3);cursor:pointer">
+					<input type="checkbox" checked style="cursor:pointer"/>
+					<div>
+						<div style="font-weight:var(--font-weight-medium);font-size:var(--font-size-sm)">Link expiration warnings</div>
+						<div style="color:var(--color-text-muted);font-size:var(--font-size-xs)">Notify 24 hours before a link expires</div>
+					</div>
+				</label>
+				<label style="display:flex;align-items:center;gap:var(--space-3);cursor:pointer">
+					<input type="checkbox" style="cursor:pointer"/>
+					<div>
+						<div style="font-weight:var(--font-weight-medium);font-size:var(--font-size-sm)">Weekly digest</div>
+						<div style="color:var(--color-text-muted);font-size:var(--font-size-xs)">Receive a weekly summary of link performance</div>
+					</div>
+				</label>
+			</div>
+		</div>
+	}
+}

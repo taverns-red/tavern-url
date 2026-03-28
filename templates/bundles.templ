@@ -1,0 +1,74 @@
+package templates
+
+import (
+	"fmt"
+	"github.com/taverns-red/tavern-url/internal/model"
+)
+
+// BundlesPage renders the link bundles (bio page) management view.
+templ BundlesPage(links []model.Link, baseURL string) {
+	@Layout("Link Bundles", true) {
+		<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:var(--space-6)">
+			<div>
+				<h1 style="font-size:var(--font-size-2xl);font-weight:var(--font-weight-bold)">Link Bundles</h1>
+				<p style="color:var(--color-text-secondary);font-size:var(--font-size-sm);margin-top:var(--space-1)">Create a bio-style landing page with grouped links</p>
+			</div>
+			<button class="btn btn-primary" data-modal-open="create-bundle-modal">
+				+ New Bundle
+			</button>
+		</div>
+
+		<!-- Create Bundle Modal -->
+		<div id="create-bundle-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:200;align-items:center;justify-content:center;padding:var(--space-4)">
+			<div class="card" style="max-width:500px;width:100%;padding:var(--space-8)">
+				<h2 style="font-size:var(--font-size-xl);font-weight:var(--font-weight-semibold);margin-bottom:var(--space-4)">Create Bundle</h2>
+				<form class="auth-form" hx-post="/api/v1/bundles" hx-target="#bundle-preview" hx-swap="innerHTML">
+					<div class="form-group">
+						<label class="form-label" for="bundle-title">Page title</label>
+						<input class="form-input" type="text" id="bundle-title" name="title" placeholder="My Nonprofit Links" required/>
+					</div>
+					<div class="form-group">
+						<label class="form-label" for="bundle-slug">Page slug</label>
+						<input class="form-input" type="text" id="bundle-slug" name="slug" placeholder="my-links" required minlength="3" maxlength="64"/>
+						<span class="form-hint">Your page will be at { fmt.Sprintf("%s/b/", baseURL) }[slug]</span>
+					</div>
+					<div class="form-group">
+						<label class="form-label" for="bundle-bio">Bio <span class="text-muted">(optional)</span></label>
+						<textarea class="form-input" id="bundle-bio" name="bio" rows="3" placeholder="A short description of your links..."></textarea>
+					</div>
+					<div id="create-bundle-error"></div>
+					<div style="display:flex;gap:var(--space-3);justify-content:flex-end">
+						<button type="button" class="btn btn-secondary" data-modal-close="create-bundle-modal">Cancel</button>
+						<button type="submit" class="btn btn-primary">
+							<span class="htmx-hide-on-request">Create</span>
+							<span class="htmx-indicator spinner"></span>
+						</button>
+					</div>
+				</form>
+			</div>
+		</div>
+
+		<!-- Bundle Preview / Active Links for bundling -->
+		<div class="card" style="margin-bottom:var(--space-6)">
+			<h2 style="font-size:var(--font-size-lg);font-weight:var(--font-weight-semibold);margin-bottom:var(--space-4)">Your Links</h2>
+			<p style="color:var(--color-text-muted);font-size:var(--font-size-sm);margin-bottom:var(--space-4)">Select links to include in your bundle page by creating a bundle above.</p>
+			<div id="bundle-preview">
+				if len(links) == 0 {
+					<p style="color:var(--color-text-muted);font-size:var(--font-size-sm)">No links yet. Create links from the dashboard first.</p>
+				} else {
+					<div style="display:flex;flex-direction:column;gap:var(--space-2)">
+						for _, link := range links {
+							<div style="display:flex;align-items:center;gap:var(--space-3);padding:var(--space-2) var(--space-3);background:var(--color-background-secondary, var(--color-border));border-radius:var(--radius-md)">
+								<input type="checkbox" name="link_ids" value={ fmt.Sprintf("%d", link.ID) } style="cursor:pointer"/>
+								<div style="flex:1;min-width:0">
+									<span style="font-weight:var(--font-weight-semibold);font-size:var(--font-size-sm)">{ fmt.Sprintf("%s/%s", baseURL, link.Slug) }</span>
+									<span style="color:var(--color-text-muted);font-size:var(--font-size-xs);margin-left:var(--space-2)">↳ { link.OriginalURL }</span>
+								</div>
+							</div>
+						}
+					</div>
+				}
+			</div>
+		</div>
+	}
+}

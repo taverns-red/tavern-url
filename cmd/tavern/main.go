@@ -109,6 +109,9 @@ func main() {
 	r.Get("/links/{slug}", pageHandler.LinkDetail)
 	r.Get("/settings/keys", pageHandler.APIKeys)
 	r.Get("/settings/org", pageHandler.Orgs)
+	r.Get("/settings/domains", pageHandler.Domains)
+	r.Get("/bundles", pageHandler.Bundles)
+	r.Get("/notifications", pageHandler.Notifications)
 
 	// API routes.
 	r.Route("/api/v1", func(r chi.Router) {

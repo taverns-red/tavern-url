@@ -10,7 +10,8 @@ type Link struct {
 	ExpiresAt    *time.Time `json:"expires_at,omitempty"`
 	MaxClicks    *int64     `json:"max_clicks,omitempty"`
 	ClickCount   int64      `json:"click_count"`
-	PasswordHash *string    `json:"-"` // never serialized
+	PasswordHash *string    `json:"-"`            // never serialized
+	PublicStats  bool       `json:"public_stats"` // allow public access to analytics
 	CreatedAt    time.Time  `json:"created_at"`
 	UpdatedAt    time.Time  `json:"updated_at"`
 }

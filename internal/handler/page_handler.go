@@ -158,3 +158,32 @@ func (h *PageHandler) Orgs(w http.ResponseWriter, r *http.Request) {
 
 	templates.OrgPage(orgs).Render(r.Context(), w)
 }
+
+// Domains renders the custom domain management page.
+func (h *PageHandler) Domains(w http.ResponseWriter, r *http.Request) {
+	if !h.isAuthenticated(r) {
+		http.Redirect(w, r, "/login", http.StatusFound)
+		return
+	}
+	// Pass empty domains list — domain CRUD repo TBD.
+	templates.DomainsPage(nil).Render(r.Context(), w)
+}
+
+// Bundles renders the link bundles (bio page) management page.
+func (h *PageHandler) Bundles(w http.ResponseWriter, r *http.Request) {
+	if !h.isAuthenticated(r) {
+		http.Redirect(w, r, "/login", http.StatusFound)
+		return
+	}
+	links, _ := h.linkSvc.ListLinks(r.Context())
+	templates.BundlesPage(links, h.baseURL).Render(r.Context(), w)
+}
+
+// Notifications renders the notification center page.
+func (h *PageHandler) Notifications(w http.ResponseWriter, r *http.Request) {
+	if !h.isAuthenticated(r) {
+		http.Redirect(w, r, "/login", http.StatusFound)
+		return
+	}
+	templates.NotificationsPage().Render(r.Context(), w)
+}
