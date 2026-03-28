@@ -128,3 +128,10 @@
 - **Mock APIKeyRepository in auth package enables full middleware testing.** RequireAPIKey and RequireAuthOrAPIKey need a real APIKeyService, which needs a repo. Creating a mock in a `_test.go` file in the auth package makes this testable without circular dependencies.
 - **Coverage gate formula averages ALL packages — be precise with thresholds.** With 4 packages at 0% and 5 tested packages averaging 72%, the overall average is ~46%. Always check the actual CI output before setting a gate.
 - **Org handler tests already existed — always check `git log` before writing new tests.** Sprint 65 already had comprehensive org handler tests. Saved time by checking first.
+
+## Sprint 71 (Repository Integration Tests)
+
+- **Integration tests need cleanup, not transactions.** Using t.Cleanup() with DELETE statements is simpler than pgx transaction rollback and avoids interfering with the running app's data.
+- **t.Skip with DATABASE_URL makes integration tests CI-compatible.** Tests skip gracefully in CI without a DB, but run locally with the existing docker-compose postgres.
+- **repository_test is an external test package.** Using `repository_test` forces testing only the public API, not internal struct fields.
+- **Org service and handler tests already existed from Sprint 65.** Always check file existence before writing new test files.
