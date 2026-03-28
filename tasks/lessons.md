@@ -95,3 +95,10 @@
 - **httptest.Server for webhook tests**: `httptest.NewServer` gives a real HTTP server for testing webhook delivery — much better than mocking the HTTP client.
 - **staticcheck SA9003 (empty branch)**: If you're checking a condition but not doing anything in the branch, either add an assertion or remove the check. The linter catches this reliably.
 - **Coverage gate ratcheting**: After adding 25 new tests, the gate can be safely raised from 8% → 20%. Never raise the gate before the tests exist.
+
+## Sprint 66 (Polish & Ship)
+
+- **FORCE_JAVASCRIPT_ACTIONS_TO_NODE24**: Adding this env var at the workflow level forces all Node.js-based actions to use Node.js 24, eliminating the deprecation warning immediately rather than waiting for the deadline.
+- **govet catches logic bugs**: The `suspect or` govet check caught `!= A || != B` which is always true — should be `!= A && != B`. Lint before commit.
+- **Dashboard templates already had status UI**: Before implementing a "new" feature, always check if the templates already have the UI elements. The dashboard already had Expired/Limit Reached badges, click counts, and expiration dates — only the link detail page was missing them.
+- **Redirect benchmark baseline**: Geo rule: 60ns, Device rule: 182ns, No match: 285ns. All under 1µs. This is the baseline to track performance regressions against.
