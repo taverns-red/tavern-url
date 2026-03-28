@@ -1,0 +1,97 @@
+package templates
+
+import (
+	"fmt"
+	"github.com/taverns-red/tavern-url/internal/model"
+)
+
+// WebhooksPage renders the webhooks management page.
+templ WebhooksPage(webhooks []model.Webhook) {
+	@Layout("Webhooks", true) {
+		<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:var(--space-6)">
+			<div>
+				<h1 style="font-size:var(--font-size-2xl);font-weight:var(--font-weight-bold)">Webhooks</h1>
+				<p style="color:var(--color-text-secondary);font-size:var(--font-size-sm);margin-top:var(--space-1)">Get notified when events occur on your links</p>
+			</div>
+			<button class="btn btn-primary" data-modal-open="create-webhook-modal">
+				+ New Webhook
+			</button>
+		</div>
+
+		<!-- Create Webhook Modal -->
+		<div id="create-webhook-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:200;align-items:center;justify-content:center;padding:var(--space-4)">
+			<div class="card" style="max-width:500px;width:100%;padding:var(--space-8)">
+				<h2 style="font-size:var(--font-size-xl);font-weight:var(--font-weight-semibold);margin-bottom:var(--space-4)">Create Webhook</h2>
+				<form class="auth-form" hx-post="/api/v1/webhooks" hx-target="#webhook-list" hx-swap="outerHTML">
+					<div class="form-group">
+						<label class="form-label" for="webhook-url">Endpoint URL</label>
+						<input class="form-input" type="url" id="webhook-url" name="url" placeholder="https://your-server.com/webhook" required/>
+					</div>
+					<div class="form-group">
+						<label class="form-label">Events</label>
+						<div style="display:flex;flex-direction:column;gap:var(--space-2)">
+							<label style="display:flex;align-items:center;gap:var(--space-2);cursor:pointer;font-size:var(--font-size-sm)">
+								<input type="checkbox" name="events" value="link.clicked"/>
+								Link clicked
+							</label>
+							<label style="display:flex;align-items:center;gap:var(--space-2);cursor:pointer;font-size:var(--font-size-sm)">
+								<input type="checkbox" name="events" value="link.created"/>
+								Link created
+							</label>
+							<label style="display:flex;align-items:center;gap:var(--space-2);cursor:pointer;font-size:var(--font-size-sm)">
+								<input type="checkbox" name="events" value="link.expired"/>
+								Link expired
+							</label>
+							<label style="display:flex;align-items:center;gap:var(--space-2);cursor:pointer;font-size:var(--font-size-sm)">
+								<input type="checkbox" name="events" value="link.exhausted"/>
+								Click limit reached
+							</label>
+						</div>
+					</div>
+					<div id="create-webhook-error"></div>
+					<div style="display:flex;gap:var(--space-3);justify-content:flex-end">
+						<button type="button" class="btn btn-secondary" data-modal-close="create-webhook-modal">Cancel</button>
+						<button type="submit" class="btn btn-primary">
+							<span class="htmx-hide-on-request">Create</span>
+							<span class="htmx-indicator spinner"></span>
+						</button>
+					</div>
+				</form>
+			</div>
+		</div>
+
+		<!-- Webhook List -->
+		<div id="webhook-list">
+			if len(webhooks) == 0 {
+				<div class="card" style="text-align:center;padding:var(--space-12)">
+					<div style="font-size:var(--font-size-3xl);margin-bottom:var(--space-4)">🪝</div>
+					<p style="font-size:var(--font-size-lg);color:var(--color-text-secondary);margin-bottom:var(--space-4)">No webhooks configured</p>
+					<p style="color:var(--color-text-muted)">Create a webhook to receive real-time event notifications.</p>
+				</div>
+			} else {
+				<div style="display:flex;flex-direction:column;gap:var(--space-3)">
+					for _, wh := range webhooks {
+						<div class="card" style="padding:var(--space-4) var(--space-6)">
+							<div style="display:flex;align-items:center;justify-content:space-between">
+								<div>
+									<div style="display:flex;align-items:center;gap:var(--space-2);margin-bottom:var(--space-1)">
+										<span style="font-weight:var(--font-weight-semibold);font-size:var(--font-size-sm);font-family:monospace;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:400px">{ wh.URL }</span>
+										if wh.Active {
+											<span style="background:var(--color-success, #10b981);color:white;padding:2px 8px;border-radius:var(--radius-sm);font-size:var(--font-size-xs)">Active</span>
+										} else {
+											<span style="background:var(--color-text-muted);color:white;padding:2px 8px;border-radius:var(--radius-sm);font-size:var(--font-size-xs)">Paused</span>
+										}
+									</div>
+									<div style="color:var(--color-text-muted);font-size:var(--font-size-xs)">
+										Events: { fmt.Sprintf("%v", wh.Events) }
+									</div>
+								</div>
+								<span class="text-sm text-muted">{ wh.CreatedAt.Format("Jan 2, 2006") }</span>
+							</div>
+						</div>
+					}
+				</div>
+			}
+		</div>
+	}
+}

@@ -112,6 +112,8 @@ func main() {
 	r.Get("/settings/domains", pageHandler.Domains)
 	r.Get("/bundles", pageHandler.Bundles)
 	r.Get("/notifications", pageHandler.Notifications)
+	r.Get("/settings/webhooks", pageHandler.Webhooks)
+	r.Get("/integrations", pageHandler.Integrations)
 
 	// API routes.
 	r.Route("/api/v1", func(r chi.Router) {

@@ -1,0 +1,69 @@
+package templates
+
+// IntegrationsPage renders the integrations and tools page covering CLI, browser extension, Zapier, and embeddable widget.
+templ IntegrationsPage() {
+	@Layout("Integrations", true) {
+		<div style="margin-bottom:var(--space-6)">
+			<h1 style="font-size:var(--font-size-2xl);font-weight:var(--font-weight-bold)">Integrations & Tools</h1>
+			<p style="color:var(--color-text-secondary);font-size:var(--font-size-sm);margin-top:var(--space-1)">Extend Tavern URL with CLI, browser extension, and third-party integrations</p>
+		</div>
+
+		<!-- CLI Tool -->
+		<div class="card" style="margin-bottom:var(--space-4)">
+			<div style="display:flex;align-items:flex-start;gap:var(--space-4)">
+				<div style="font-size:var(--font-size-2xl)">⌨️</div>
+				<div style="flex:1">
+					<h2 style="font-size:var(--font-size-lg);font-weight:var(--font-weight-semibold);margin-bottom:var(--space-2)">tavern-cli</h2>
+					<p style="color:var(--color-text-secondary);font-size:var(--font-size-sm);margin-bottom:var(--space-3)">Manage links from your terminal. Create, list, and delete links without leaving your workflow.</p>
+					<div style="background:var(--color-background-secondary, var(--color-border));border-radius:var(--radius-md);padding:var(--space-3);font-family:monospace;font-size:var(--font-size-sm);margin-bottom:var(--space-2)">
+						<code>go install github.com/taverns-red/tavern-cli@latest</code>
+					</div>
+					<div style="background:var(--color-background-secondary, var(--color-border));border-radius:var(--radius-md);padding:var(--space-3);font-family:monospace;font-size:var(--font-size-sm)">
+						<code>tavern shorten https://habitat.org/donate --slug spring-gala</code>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<!-- Browser Extension -->
+		<div class="card" style="margin-bottom:var(--space-4)">
+			<div style="display:flex;align-items:flex-start;gap:var(--space-4)">
+				<div style="font-size:var(--font-size-2xl)">🧩</div>
+				<div style="flex:1">
+					<h2 style="font-size:var(--font-size-lg);font-weight:var(--font-weight-semibold);margin-bottom:var(--space-2)">Browser Extension</h2>
+					<p style="color:var(--color-text-secondary);font-size:var(--font-size-sm);margin-bottom:var(--space-3)">Shorten any page with one click. Available for Chrome and Firefox.</p>
+					<div style="display:flex;gap:var(--space-2)">
+						<button class="btn btn-secondary" style="font-size:var(--font-size-sm)">Chrome Web Store (Coming Soon)</button>
+						<button class="btn btn-secondary" style="font-size:var(--font-size-sm)">Firefox Add-ons (Coming Soon)</button>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<!-- Zapier / Integrations -->
+		<div class="card" style="margin-bottom:var(--space-4)">
+			<div style="display:flex;align-items:flex-start;gap:var(--space-4)">
+				<div style="font-size:var(--font-size-2xl)">⚡</div>
+				<div style="flex:1">
+					<h2 style="font-size:var(--font-size-lg);font-weight:var(--font-weight-semibold);margin-bottom:var(--space-2)">Zapier & Integrations</h2>
+					<p style="color:var(--color-text-secondary);font-size:var(--font-size-sm);margin-bottom:var(--space-3)">Connect Tavern URL to 5,000+ apps. Auto-shorten links from Google Sheets, Slack, and more.</p>
+					<button class="btn btn-secondary" style="font-size:var(--font-size-sm)">View on Zapier (Coming Soon)</button>
+				</div>
+			</div>
+		</div>
+
+		<!-- Embeddable Widget -->
+		<div class="card" style="margin-bottom:var(--space-4)">
+			<div style="display:flex;align-items:flex-start;gap:var(--space-4)">
+				<div style="font-size:var(--font-size-2xl)">📊</div>
+				<div style="flex:1">
+					<h2 style="font-size:var(--font-size-lg);font-weight:var(--font-weight-semibold);margin-bottom:var(--space-2)">Embeddable Analytics Widget</h2>
+					<p style="color:var(--color-text-secondary);font-size:var(--font-size-sm);margin-bottom:var(--space-3)">Embed real-time click stats on your own website. Works with any link that has public stats enabled.</p>
+					<div style="background:var(--color-background-secondary, var(--color-border));border-radius:var(--radius-md);padding:var(--space-3);font-family:monospace;font-size:var(--font-size-sm)">
+						<code>&lt;iframe src="https://your-instance/embed/YOUR-SLUG" width="300" height="200"&gt;&lt;/iframe&gt;</code>
+					</div>
+				</div>
+			</div>
+		</div>
+	}
+}

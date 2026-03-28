@@ -187,3 +187,21 @@ func (h *PageHandler) Notifications(w http.ResponseWriter, r *http.Request) {
 	}
 	templates.NotificationsPage().Render(r.Context(), w)
 }
+
+// Webhooks renders the webhook management page.
+func (h *PageHandler) Webhooks(w http.ResponseWriter, r *http.Request) {
+	if !h.isAuthenticated(r) {
+		http.Redirect(w, r, "/login", http.StatusFound)
+		return
+	}
+	templates.WebhooksPage(nil).Render(r.Context(), w)
+}
+
+// Integrations renders the integrations & tools page.
+func (h *PageHandler) Integrations(w http.ResponseWriter, r *http.Request) {
+	if !h.isAuthenticated(r) {
+		http.Redirect(w, r, "/login", http.StatusFound)
+		return
+	}
+	templates.IntegrationsPage().Render(r.Context(), w)
+}
