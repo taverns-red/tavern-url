@@ -114,6 +114,10 @@ func main() {
 	r.Get("/notifications", pageHandler.Notifications)
 	r.Get("/settings/webhooks", pageHandler.Webhooks)
 	r.Get("/integrations", pageHandler.Integrations)
+	r.Get("/admin", pageHandler.Admin)
+	r.Get("/admin/applications", pageHandler.Applications)
+	r.Get("/docs", pageHandler.Docs)
+	r.Get("/apply", pageHandler.Apply)
 
 	// API routes.
 	r.Route("/api/v1", func(r chi.Router) {

@@ -205,3 +205,31 @@ func (h *PageHandler) Integrations(w http.ResponseWriter, r *http.Request) {
 	}
 	templates.IntegrationsPage().Render(r.Context(), w)
 }
+
+// Admin renders the enterprise admin settings page.
+func (h *PageHandler) Admin(w http.ResponseWriter, r *http.Request) {
+	if !h.isAuthenticated(r) {
+		http.Redirect(w, r, "/login", http.StatusFound)
+		return
+	}
+	templates.AdminPage().Render(r.Context(), w)
+}
+
+// Applications renders the NFP applications review page.
+func (h *PageHandler) Applications(w http.ResponseWriter, r *http.Request) {
+	if !h.isAuthenticated(r) {
+		http.Redirect(w, r, "/login", http.StatusFound)
+		return
+	}
+	templates.ApplicationsListPage(nil).Render(r.Context(), w)
+}
+
+// Docs renders the public documentation page.
+func (h *PageHandler) Docs(w http.ResponseWriter, r *http.Request) {
+	templates.DocsPage().Render(r.Context(), w)
+}
+
+// Apply renders the public NFP application form.
+func (h *PageHandler) Apply(w http.ResponseWriter, r *http.Request) {
+	templates.ApplicationPage().Render(r.Context(), w)
+}
