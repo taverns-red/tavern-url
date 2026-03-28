@@ -88,3 +88,10 @@
 - **Coverage gate total calculation**: `go tool cover -func` outputs a `total:` line that includes ALL files. Filtering individual function lines with `grep -v` doesn't recompute the total. Instead, average coverages from `go test -cover` output per package.
 - **Ratcheting thresholds**: Start coverage gates at the current floor (e.g., 8%) instead of the aspirational target (60%). Ratchet up incrementally as tests are added. This prevents blocking CI while still catching regressions.
 - **HTTP write errcheck exclusions**: Excluding `(net/http.ResponseWriter).Write` and `(templ.Component).Render` from errcheck is standard Go practice — when writing to an HTTP response, there's nothing useful to do with the error.
+
+## Sprint 65 (Test Depth)
+
+- **Weighted redirect testing**: Test weight=100 (always match) and weight=0 (never match) as deterministic boundary cases. Avoid testing intermediate weights probabilistically.
+- **httptest.Server for webhook tests**: `httptest.NewServer` gives a real HTTP server for testing webhook delivery — much better than mocking the HTTP client.
+- **staticcheck SA9003 (empty branch)**: If you're checking a condition but not doing anything in the branch, either add an assertion or remove the check. The linter catches this reliably.
+- **Coverage gate ratcheting**: After adding 25 new tests, the gate can be safely raised from 8% → 20%. Never raise the gate before the tests exist.
