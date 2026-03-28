@@ -1,0 +1,81 @@
+name: DORA Metrics
+
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  record:
+    runs-on: ubuntu-latest
+    if: github.event.workflow_run.head_branch == 'main'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Full history for lead time calculation
+
+      - name: Calculate Metrics
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_ID: ${{ github.event.workflow_run.id }}
+          RUN_CONCLUSION: ${{ github.event.workflow_run.conclusion }}
+          HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
+        run: |
+          set -euo pipefail
+
+          # 1. Deployment Frequency: recorded per invocation (count events over time)
+          DEPLOY_TIME=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+
+          # 2. Lead Time: time from first commit in push to deploy completion
+          COMMIT_TIME=$(git show -s --format=%cI "$HEAD_SHA" 2>/dev/null || echo "$DEPLOY_TIME")
+          LEAD_TIME_SECONDS=$(( $(date -d "$DEPLOY_TIME" +%s 2>/dev/null || date -jf "%Y-%m-%dT%H:%M:%SZ" "$DEPLOY_TIME" +%s) - $(date -d "$COMMIT_TIME" +%s 2>/dev/null || date -jf "%Y-%m-%dT%H:%M:%S%z" "$COMMIT_TIME" +%s) ))
+
+          # 3. Change Failure Rate: tracked by conclusion field
+          IS_FAILURE="false"
+          if [ "$RUN_CONCLUSION" != "success" ]; then
+            IS_FAILURE="true"
+          fi
+
+          # Build the metrics event
+          EVENT=$(cat <<EOF
+          {
+            "timestamp": "$DEPLOY_TIME",
+            "sha": "$HEAD_SHA",
+            "run_id": "$RUN_ID",
+            "conclusion": "$RUN_CONCLUSION",
+            "is_failure": $IS_FAILURE,
+            "lead_time_seconds": $LEAD_TIME_SECONDS
+          }
+          EOF
+          )
+
+          echo "=== DORA Metrics Event ==="
+          echo "$EVENT" | jq .
+
+          # Store as workflow artifact for historical tracking
+          mkdir -p metrics
+          echo "$EVENT" | jq . > metrics/event-${RUN_ID}.json
+
+      - name: Upload Metrics Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: dora-event-${{ github.event.workflow_run.id }}
+          path: metrics/
+          retention-days: 90
+
+      - name: Summary
+        env:
+          RUN_CONCLUSION: ${{ github.event.workflow_run.conclusion }}
+          HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
+        run: |
+          echo "## DORA Metrics" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Metric | Value |" >> $GITHUB_STEP_SUMMARY
+          echo "|--------|-------|" >> $GITHUB_STEP_SUMMARY
+          echo "| **Deploy SHA** | \`${HEAD_SHA:0:7}\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Conclusion** | $RUN_CONCLUSION |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Timestamp** | $(date -u +%Y-%m-%dT%H:%M:%SZ) |" >> $GITHUB_STEP_SUMMARY
