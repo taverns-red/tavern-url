@@ -102,3 +102,10 @@
 - **govet catches logic bugs**: The `suspect or` govet check caught `!= A || != B` which is always true — should be `!= A && != B`. Lint before commit.
 - **Dashboard templates already had status UI**: Before implementing a "new" feature, always check if the templates already have the UI elements. The dashboard already had Expired/Limit Reached badges, click counts, and expiration dates — only the link detail page was missing them.
 - **Redirect benchmark baseline**: Geo rule: 60ns, Device rule: 182ns, No match: 285ns. All under 1µs. This is the baseline to track performance regressions against.
+
+## Sprint 67 (Auth & Coverage Depth)
+
+- **Model methods are pure functions — test them first.** IsExpired, IsExhausted, IsPasswordProtected are pure functions that went from 0% to 100% in minutes. Always start with these quick wins.
+- **Auth helpers are testable without mocking services.** extractBearerToken, UserIDFromContext, UserFromContext are pure functions that can be tested in the auth package without any service mocking.
+- **Existing test files may already exist.** Always check `find . -name '*_test.go'` before creating new test files. I almost recreated analytics_service_test.go.
+- **errcheck catches test ignoring return values.** Even in tests, golangci-lint catches unchecked errors. Use `_, _, _ = svc.Method()` to explicitly discard returns.
