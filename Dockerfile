@@ -31,4 +31,4 @@ RUN chmod +x /app/migrate.sh
 
 EXPOSE 8080
 
-ENTRYPOINT ["./tavern"]
+CMD ["./tavern"]
