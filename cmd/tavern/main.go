@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"net/url"
 	"os"
 	"os/signal"
 	"strings"
@@ -174,11 +175,17 @@ func main() {
 
 	// CSRF protection setup.
 	csrfKey := sha256.Sum256([]byte(sessionSecret))
+	
+	parsedBaseURL, err := url.Parse(baseURL)
+	if err != nil {
+		log.Fatalf("invalid BASE_URL: %v", err)
+	}
+
 	csrfMw := csrf.Protect(
 		csrfKey[:],
 		csrf.Secure(cookieSecure),
 		csrf.Path("/"),
-		csrf.TrustedOrigins([]string{baseURL}),
+		csrf.TrustedOrigins([]string{parsedBaseURL.Host}),
 	)
 
 	// Middleware to inject CSRF token into context for Templ.
