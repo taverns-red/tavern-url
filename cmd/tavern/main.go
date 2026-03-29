@@ -178,6 +178,7 @@ func main() {
 		csrfKey[:],
 		csrf.Secure(cookieSecure),
 		csrf.Path("/"),
+		csrf.TrustedOrigins([]string{baseURL}),
 	)
 
 	// Middleware to inject CSRF token into context for Templ.
