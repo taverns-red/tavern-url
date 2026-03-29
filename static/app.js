@@ -1,6 +1,14 @@
 // Tavern URL — Dashboard interactions
 // Uses event delegation to avoid inline onclick (CSP-safe).
 
+// ── Global HTMX Config (CSRF Token Injection) ──
+document.addEventListener('htmx:configRequest', function(evt) {
+  var meta = document.querySelector('meta[name="gorilla.csrf.Token"]');
+  if (meta && meta.content) {
+    evt.detail.headers['X-CSRF-Token'] = meta.content;
+  }
+});
+
 document.addEventListener('DOMContentLoaded', function () {
   // ── Modal open ──
   document.addEventListener('click', function (e) {

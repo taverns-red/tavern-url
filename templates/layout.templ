@@ -13,14 +13,6 @@ templ Layout(title string, isAuthenticated bool) {
 			<meta name="gorilla.csrf.Token" content={ getCSRFToken(ctx) } />
 			<script src="https://unpkg.com/htmx.org@2.0.4" integrity="sha384-HGfztofotfshcF7+8n44JQL2oJmowVChPTg48S+jvZoztPfvwD79OC/LTtG6dMp+" crossorigin="anonymous"></script>
 			<script src="/static/app.js" defer></script>
-			<script>
-				document.addEventListener('htmx:configRequest', function(evt) {
-					let token = document.querySelector('meta[name="gorilla.csrf.Token"]').content;
-					if (token) {
-						evt.detail.headers['X-CSRF-Token'] = token;
-					}
-				});
-			</script>
 		</head>
 		<body>
 			<div class="app-layout">
