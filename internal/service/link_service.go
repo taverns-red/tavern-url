@@ -66,8 +66,12 @@ func (s *LinkService) CreateLink(ctx context.Context, originalURL string, custom
 
 	// Auto-generate slug with collision retry.
 	for i := 0; i < maxSlugRetries; i++ {
-		link.Slug = GenerateSlug()
-		err := s.repo.Create(ctx, link)
+		slug, err := GenerateSlug()
+		if err != nil {
+			return nil, fmt.Errorf("slug generation failed: %w", err)
+		}
+		link.Slug = slug
+		err = s.repo.Create(ctx, link)
 		if err == nil {
 			return link, nil
 		}

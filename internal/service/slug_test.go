@@ -6,7 +6,10 @@ import (
 )
 
 func TestGenerateSlug_Length(t *testing.T) {
-	slug := GenerateSlug()
+	slug, err := GenerateSlug()
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 	if len(slug) != 6 {
 		t.Errorf("expected slug length 6, got %d: %q", len(slug), slug)
 	}
@@ -15,7 +18,10 @@ func TestGenerateSlug_Length(t *testing.T) {
 func TestGenerateSlug_Base62(t *testing.T) {
 	base62 := regexp.MustCompile(`^[0-9a-zA-Z]+$`)
 	for i := 0; i < 100; i++ {
-		slug := GenerateSlug()
+		slug, err := GenerateSlug()
+		if err != nil {
+			t.Fatalf("unexpected error on iteration %d: %v", i, err)
+		}
 		if !base62.MatchString(slug) {
 			t.Errorf("slug contains non-Base62 characters: %q", slug)
 		}
@@ -25,11 +31,27 @@ func TestGenerateSlug_Base62(t *testing.T) {
 func TestGenerateSlug_Unique(t *testing.T) {
 	seen := make(map[string]bool)
 	for i := 0; i < 1000; i++ {
-		slug := GenerateSlug()
+		slug, err := GenerateSlug()
+		if err != nil {
+			t.Fatalf("unexpected error on iteration %d: %v", i, err)
+		}
 		if seen[slug] {
 			t.Errorf("duplicate slug generated: %q", slug)
 		}
 		seen[slug] = true
+	}
+}
+
+func TestGenerateSlug_ReturnsError(t *testing.T) {
+	// On a healthy system, GenerateSlug should never return an error.
+	// This test documents the contract: the function returns (string, error)
+	// rather than panicking.
+	slug, err := GenerateSlug()
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if slug == "" {
+		t.Error("expected non-empty slug on success")
 	}
 }
 

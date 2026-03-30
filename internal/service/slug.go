@@ -24,18 +24,17 @@ const (
 var slugPattern = regexp.MustCompile(`^[a-zA-Z0-9-]+$`)
 
 // GenerateSlug produces a cryptographically random 6-character Base62 slug.
-func GenerateSlug() string {
+func GenerateSlug() (string, error) {
 	b := make([]byte, slugLength)
 	max := big.NewInt(int64(len(base62Chars)))
 	for i := range b {
 		n, err := rand.Int(rand.Reader, max)
 		if err != nil {
-			// crypto/rand should never fail on a healthy system.
-			panic(fmt.Sprintf("crypto/rand failed: %v", err))
+			return "", fmt.Errorf("crypto/rand failed: %w", err)
 		}
 		b[i] = base62Chars[n.Int64()]
 	}
-	return string(b)
+	return string(b), nil
 }
 
 // ValidateCustomSlug checks that a user-provided slug meets the business rules:
