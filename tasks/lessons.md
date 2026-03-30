@@ -179,3 +179,15 @@
 - **Avoid modifying every template:** Instead of passing \`csrfToken string\` into 15+ different \`templ\` components, inject it via \`context.WithValue\` in a middleware running *after* \`csrf.Protect\`.
 - **Staticcheck context keys:** Never use a built-in primitive (like \`string\`) as a context key to avoid \`SA1029\`. Use a custom type, e.g., \`type contextKey string\`.
 - **HTMX global config:** Adding an event listener for \`htmx:configRequest\` to read a \`<meta>\` tag and inject \`X-CSRF-Token\` works perfectly to protect all \`hx-post\` forms automatically without boilerplate.
+
+## Production Deployment (Fly.io + Neon)
+
+- **Fly.io free-tier Postgres is unreliable.** The unmanaged Postgres instances get OOMKilled repeatedly on the free 256MB plan. Neon serverless Postgres is a much better fit — zero ops, auto-scales, free tier works perfectly.
+- **CSRF TrustedOrigins behind TLS termination:** Fly terminates TLS at the edge proxy and sends HTTP internally. `gorilla/csrf` sees an HTTP request but HTTPS `Origin`/`Referer` headers, and rejects it. Fix: parse `BASE_URL` host and pass to `csrf.TrustedOrigins(...)`.
+- **CSP blocks inline scripts silently.** If your CSP has `script-src 'self'`, any inline `<script>` in templates will be blocked *without a visible UI error*. The HTMX CSRF token injection was in an inline script — it silently failed, causing all POST requests to get 403'd. Always put HTMX config in an external `.js` file.
+- **Cache-bust static assets after deploy changes.** Use `?v=N` query params on script tags to force browsers to fetch updated JS files after deploys.
+
+## Panic-Free Slug Generation (#59)
+
+- **Never panic in library code.** `GenerateSlug()` panicked if `crypto/rand` failed. While this "never happens" on healthy systems, a panic in production takes down the entire Go process with zero observability. Returning `(string, error)` lets callers log, retry, or fail gracefully.
+- **Signature change has small blast radius.** Only one caller (`link_service.go`) and three test functions needed updating. The refactor took <5 minutes.

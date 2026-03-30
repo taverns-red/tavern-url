@@ -4,7 +4,7 @@ import (
 	"context"
 	"crypto/sha256"
 	"fmt"
-	"log"
+	"log/slog"
 	"net/http"
 	"net/url"
 	"os"
@@ -27,17 +27,23 @@ import (
 )
 
 func main() {
+	// Set up structured logging.
+	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
+	slog.SetDefault(logger)
+
 	// Load config from environment.
 	port := envOrDefault("PORT", "8080")
 	baseURL := envOrDefault("BASE_URL", "http://localhost:"+port)
 	databaseURL := os.Getenv("DATABASE_URL")
 	if databaseURL == "" {
-		log.Fatal("DATABASE_URL environment variable is required")
+		slog.Error("DATABASE_URL environment variable is required")
+		os.Exit(1)
 	}
 
 	sessionSecret := os.Getenv("SESSION_SECRET")
 	if sessionSecret == "" {
-		log.Fatal("SESSION_SECRET environment variable is required")
+		slog.Error("SESSION_SECRET environment variable is required")
+		os.Exit(1)
 	}
 
 	cookieSecure := envOrDefault("COOKIE_SECURE", "true") == "true"
@@ -46,14 +52,16 @@ func main() {
 	ctx := context.Background()
 	pool, err := pgxpool.New(ctx, databaseURL)
 	if err != nil {
-		log.Fatalf("failed to connect to database: %v", err)
+		slog.Error("failed to connect to database", "error", err)
+		os.Exit(1)
 	}
 	defer pool.Close()
 
 	if err := pool.Ping(ctx); err != nil {
-		log.Fatalf("failed to ping database: %v", err)
+		slog.Error("failed to ping database", "error", err)
+		os.Exit(1)
 	}
-	log.Println("connected to database")
+	slog.Info("connected to database")
 
 	// Wire repositories.
 	linkRepo := repository.NewPgLinkRepository(pool)
@@ -90,9 +98,9 @@ func main() {
 			RedirectURL:  baseURL + "/auth/google/callback",
 		}, userRepo)
 		googleHandler = handler.NewGoogleLoginHandler(googleProvider, sessionStore)
-		log.Println("Google OAuth enabled")
+		slog.Info("Google OAuth enabled")
 	} else {
-		log.Println("Google OAuth disabled (GOOGLE_CLIENT_ID/GOOGLE_CLIENT_SECRET not set)")
+		slog.Info("Google OAuth disabled", "reason", "GOOGLE_CLIENT_ID/GOOGLE_CLIENT_SECRET not set")
 	}
 
 	// Page handler for server-rendered pages.
@@ -178,7 +186,8 @@ func main() {
 	
 	parsedBaseURL, err := url.Parse(baseURL)
 	if err != nil {
-		log.Fatalf("invalid BASE_URL: %v", err)
+		slog.Error("invalid BASE_URL", "error", err)
+		os.Exit(1)
 	}
 
 	csrfMw := csrf.Protect(
@@ -221,22 +230,24 @@ func main() {
 	}
 
 	go func() {
-		log.Printf("tavern-url listening on %s", srv.Addr)
+		slog.Info("tavern-url listening", "addr", srv.Addr)
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			log.Fatalf("server error: %v", err)
+			slog.Error("server error", "error", err)
+			os.Exit(1)
 		}
 	}()
 
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit
-	log.Println("shutting down server...")
+	slog.Info("shutting down server...")
 
 	shutdownCtx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
 	if err := srv.Shutdown(shutdownCtx); err != nil {
-		log.Fatalf("server forced to shutdown: %v", err)
+		slog.Error("server forced to shutdown", "error", err)
+		os.Exit(1)
 	}
 	fmt.Println("server stopped cleanly")
 }
