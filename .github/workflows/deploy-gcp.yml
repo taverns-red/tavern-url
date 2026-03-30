@@ -1,0 +1,68 @@
+name: Deploy to Google Cloud Run
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+env:
+  PROJECT_ID: tavern-url-prod
+  REGION: us-east1
+  GAR_LOCATION: us-east1-docker.pkg.dev/tavern-url-prod/tavern-url-docker
+  SERVICE: tavern-url
+  WORKLOAD_IDENTITY_PROVIDER: projects/950563748936/locations/global/workloadIdentityPools/github-actions-pool/providers/github-oidc
+  SERVICE_ACCOUNT: github-actions@tavern-url-prod.iam.gserviceaccount.com
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud
+        id: auth
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ env.WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ env.SERVICE_ACCOUNT }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          project_id: ${{ env.PROJECT_ID }}
+
+      - name: Authorize Docker Push
+        run: gcloud auth configure-docker ${{ env.REGION }}-docker.pkg.dev --quiet
+
+      - name: Build and Push Container Image
+        run: |
+          IMAGE="${{ env.GAR_LOCATION }}/${{ env.SERVICE }}:${{ github.sha }}"
+          docker build -t $IMAGE .
+          docker push $IMAGE
+
+      - name: Run Database Migrations (Cloud Run Job)
+        run: |
+          IMAGE="${{ env.GAR_LOCATION }}/${{ env.SERVICE }}:${{ github.sha }}"
+          if gcloud run jobs describe migrate-db --region ${{ env.REGION }} > /dev/null 2>&1; then
+            gcloud run jobs update migrate-db --image $IMAGE --region ${{ env.REGION }}
+          else
+            gcloud run jobs create migrate-db --image $IMAGE --region ${{ env.REGION }} --project ${{ env.PROJECT_ID }} --set-secrets "DATABASE_URL=TA_DATABASE_URL:latest" --command "sh" --args "/app/migrate.sh"
+          fi
+          gcloud run jobs execute migrate-db --region ${{ env.REGION }} --wait
+
+      - name: Deploy to Cloud Run
+        run: |
+          IMAGE="${{ env.GAR_LOCATION }}/${{ env.SERVICE }}:${{ github.sha }}"
+          gcloud run deploy ${{ env.SERVICE }} \
+            --image $IMAGE \
+            --region ${{ env.REGION }} \
+            --project ${{ env.PROJECT_ID }} \
+            --set-secrets "DATABASE_URL=TA_DATABASE_URL:latest,SESSION_SECRET=TA_SESSION_SECRET:latest,GOOGLE_CLIENT_ID=TA_GOOGLE_CLIENT_ID:latest,GOOGLE_CLIENT_SECRET=TA_GOOGLE_CLIENT_SECRET:latest" \
+            --set-env-vars "BASE_URL=https://url.taverns.red,COOKIE_SECURE=true" \
+            --allow-unauthenticated
