@@ -1,0 +1,26 @@
+package templates
+
+// ErrorPage renders a user-friendly error page with a message and a link to try again.
+templ ErrorPage(title string, message string, retryURL string) {
+	@Layout(title, false) {
+		<div class="auth-page">
+			<div class="auth-card">
+				<div class="card">
+					<div style="text-align:center;padding:var(--space-4) 0">
+						<svg viewBox="0 0 24 24" fill="none" stroke="var(--color-error)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:48px;height:48px;margin:0 auto var(--space-4)">
+							<circle cx="12" cy="12" r="10"></circle>
+							<line x1="12" y1="8" x2="12" y2="12"></line>
+							<line x1="12" y1="16" x2="12.01" y2="16"></line>
+						</svg>
+						<h1 class="auth-title">{ title }</h1>
+						<p class="auth-subtitle" style="margin-bottom:var(--space-6)">{ message }</p>
+						<a href={ templ.SafeURL(retryURL) } class="btn btn-primary btn-lg">Try again</a>
+						<p style="margin-top:var(--space-4)">
+							<a href="/login" style="color:var(--color-text-secondary)">← Back to login</a>
+						</p>
+					</div>
+				</div>
+			</div>
+		</div>
+	}
+}

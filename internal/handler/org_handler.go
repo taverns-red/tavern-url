@@ -244,13 +244,23 @@ func (h *GoogleLoginHandler) Login(w http.ResponseWriter, r *http.Request) {
 func (h *GoogleLoginHandler) Callback(w http.ResponseWriter, r *http.Request) {
 	code := r.URL.Query().Get("code")
 	if code == "" {
-		writeJSON(w, http.StatusBadRequest, errorResponse{Error: "missing authorization code"})
+		w.WriteHeader(http.StatusBadRequest)
+		templates.ErrorPage(
+			"Missing Authorization Code",
+			"Google did not return an authorization code. This can happen if you denied the login request.",
+			"/auth/google/login",
+		).Render(r.Context(), w)
 		return
 	}
 
 	user, err := h.provider.HandleCallback(r.Context(), code)
 	if err != nil {
-		writeJSON(w, http.StatusInternalServerError, errorResponse{Error: "OAuth authentication failed"})
+		w.WriteHeader(http.StatusBadGateway)
+		templates.ErrorPage(
+			"Login Failed",
+			"We couldn't complete your Google login. Please try again in a moment.",
+			"/auth/google/login",
+		).Render(r.Context(), w)
 		return
 	}
 
