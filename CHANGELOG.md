@@ -1,5 +1,29 @@
 # Changelog
 
+## [1.1.0](https://github.com/taverns-red/tavern-url/compare/v1.0.0...v1.1.0) (2026-03-30)
+
+
+### Features
+
+* add ErrorPage template and graceful OAuth failure handling ([#61](https://github.com/taverns-red/tavern-url/issues/61)) ([22cd263](https://github.com/taverns-red/tavern-url/commit/22cd263f64df3144fc4a891bcdb31030d3cddd0c))
+* add expiration and click limit status to link detail page ([d519082](https://github.com/taverns-red/tavern-url/commit/d519082b327d8c45a67d30bef9d618fb1032f823))
+* add Fly.io deployment infrastructure ([#64](https://github.com/taverns-red/tavern-url/issues/64)) ([806124a](https://github.com/taverns-red/tavern-url/commit/806124a31f6fb0346c67db5ccae897d333fa383b))
+* migrate to structured logging with log/slog ([#60](https://github.com/taverns-red/tavern-url/issues/60)) ([48a1479](https://github.com/taverns-red/tavern-url/commit/48a1479592ce2ada9f0295bb9e322e9bde4b08aa))
+* **security:** harden configuration and implement CSRF ([#1](https://github.com/taverns-red/tavern-url/issues/1), [#2](https://github.com/taverns-red/tavern-url/issues/2), [#3](https://github.com/taverns-red/tavern-url/issues/3), [#4](https://github.com/taverns-red/tavern-url/issues/4)) ([69b94bf](https://github.com/taverns-red/tavern-url/commit/69b94bfcdd10f4eba2615e56c9dfba1495a0045d))
+
+
+### Bug Fixes
+
+* add TrustedOrigins to CSRF config for TLS termination ([#64](https://github.com/taverns-red/tavern-url/issues/64)) ([fdc360c](https://github.com/taverns-red/tavern-url/commit/fdc360ccd5fd54f6b7749c864cdb550dbe99b291))
+* **ci:** correct coverage gate to 39% (average includes 0% packages) ([72697d1](https://github.com/taverns-red/tavern-url/commit/72697d105dc168bcbe27d1ac306ac9b493bc88b8))
+* compile removed inline script to satisfy CSP & bust app.js cache ([#64](https://github.com/taverns-red/tavern-url/issues/64)) ([a3693a6](https://github.com/taverns-red/tavern-url/commit/a3693a65f8b88382184fd9039bc41b672fbb34ad))
+* coverage gate threshold and calculation ([#38](https://github.com/taverns-red/tavern-url/issues/38)) ([0eb46e8](https://github.com/taverns-red/tavern-url/commit/0eb46e8e5d5f03274a3b96e0d29e6740fa06b799))
+* move HTMX CSRF config to static JS to respect CSP ([#64](https://github.com/taverns-red/tavern-url/issues/64)) ([3d1d0bb](https://github.com/taverns-red/tavern-url/commit/3d1d0bb123cb1e2a92a994852a20effaa055d090))
+* parse URL host for CSRF TrustedOrigins ([#64](https://github.com/taverns-red/tavern-url/issues/64)) ([5f26439](https://github.com/taverns-red/tavern-url/commit/5f2643973299e82e2949efbc9c0164cbe7e80794))
+* replace panic in GenerateSlug with error return ([#59](https://github.com/taverns-red/tavern-url/issues/59)) ([c8ee4fa](https://github.com/taverns-red/tavern-url/commit/c8ee4faaa717e045c165edfe602bb6fbb1dc3220))
+* use CMD instead of ENTRYPOINT for Fly release_command ([#64](https://github.com/taverns-red/tavern-url/issues/64)) ([3840888](https://github.com/taverns-red/tavern-url/commit/3840888da77b3a2314223128f97090cf93a77a43))
+* use go install for golangci-lint in CI ([#37](https://github.com/taverns-red/tavern-url/issues/37)) ([2d720fa](https://github.com/taverns-red/tavern-url/commit/2d720fa490a92b44559cb42631b095c814f054ad))
+
 ## 1.0.0 (2026-03-28)
 
 
